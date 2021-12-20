@@ -4,14 +4,12 @@
 #include <string>
 #include "Filesystem.h"
 
-
 #define GLUT_DISABLE_ATEXIT_HACK
 #define GLUT_API_VERSION 4
 #include "GL/glut.h"
 
 #include "ChunkManager.h"
 #include "Entity.h"
-
 
 #include "typedefs.h"
 #include "defines.h"
