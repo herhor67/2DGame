@@ -2,6 +2,7 @@
 
 #include <array>
 #include <string>
+#include "Perlin.h"
 
 #include "typedefs.h"
 #include "defines.h"

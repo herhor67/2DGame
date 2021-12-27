@@ -32,6 +32,7 @@
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Filesystem.h" />
     <ClInclude Include="functions.h" />
+    <ClInclude Include="Perlin.h" />
     <ClInclude Include="TerrainGenerator.h" />
     <ClInclude Include="typedefs.h" />
   </ItemGroup>
