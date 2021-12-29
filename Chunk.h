@@ -22,8 +22,12 @@ public:
 	~Chunk();
 	bool save() const;
 	void draw() const;
-	void test();
-	void flatFill();
+
 	void fill();
+
+	void testFill();
+	void flatFill();
+	void perlinFill();
+	
 	Block getBlockAt(BlkCrd, BlkCrd) const;
 };

@@ -7,7 +7,7 @@
 
 
 // CHUNK SETTINGS
-#define CHUNK_HEIGHT 32
+#define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH  8
 #define CHUNK_BLOCKNUM (CHUNK_HEIGHT*CHUNK_WIDTH)
 
@@ -15,6 +15,11 @@
 #define CHUNK_EXT ".chnk"
 
 #define CHUNK_TTL_MS (10*1000)
+
+
+// TERRAIN SETTINGS
+#define WATER_LEVEL 64
+
 
 
 // Z-OFFSETS
@@ -30,7 +35,7 @@
 
 
 // VIEWPORT SETTINGS
-#define ZOOMOUT 10.0f
+#define ZOOMOUT 300.0f
 //#define ZOOMOUT 4.0f
 #define DEFAULT_ASPECT 1.7777777777777777 // 16/9
 #define REQUIRE_ENTIRE 0
@@ -38,7 +43,7 @@
 
 // DRAWING OPTIONS
 #define DRAW_FACES 1
-#define DRAW_BORDERS 1
+#define DRAW_BORDERS 0
 #define DOUBLE_BUFFERED 1
 
 

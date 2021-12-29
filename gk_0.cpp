@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include "Filesystem.h"
+#include "Perlin.h"
 
 #define GLUT_DISABLE_ATEXIT_HACK
 #define GLUT_API_VERSION 4
@@ -166,8 +167,8 @@ struct Environments
 {
 	static constexpr Environment test = { {0, 0}, {-ENV_GRAVITY, 0}, {1.0f, 1.0f} };
 
-	static constexpr Environment midair   = { {0, 0}, {0, ENV_GRAVITY}, {1.0f, 1.0f} };
-//	static constexpr Environment midair   = { {0, 0}, {0, 0}, {1.0f, 1.0f} };
+//	static constexpr Environment midair   = { {0, 0}, {0, ENV_GRAVITY}, {1.0f, 1.0f} };
+	static constexpr Environment midair   = { {0, 0}, {0, 0}, {0, 0} };
 	static constexpr Environment standing = { {0, 0}, {0, ENV_GRAVITY}, {300.0f, 1.0f} };
 };
 
@@ -470,16 +471,16 @@ void regularKeyEvent(unsigned char key, int x, int y)
 //*/
 //*/
 	case 'W':
-		player.vel.Y = 5.0f;
+		player.vel.Y = 50.0f;
 		break;
 	case 'S':
-		player.vel.Y = -3.0f;
+		player.vel.Y = -30.0f;
 		break;
 	case 'A':
-		player.vel.X = -4.0f;
+		player.vel.X = -40.0f*4;
 		break;
 	case 'D':
-		player.vel.X = 4.0f;
+		player.vel.X = 40.0f * 4;
 		break;
 	case ' ':
 		paused = !paused;
@@ -524,26 +525,26 @@ int main(int argc, char** argv)
 	//*/
 
 	glutInit(&argc, argv);            // Initialize GLUT
-	
+
 	glutInitWindowSize(windowedWidth, windowedHeight);  // Initial window width and height
 	glutInitWindowPosition(windowedPosX, windowedPosY); // Initial window top-left corner (x, y)
 	windowID = glutCreateWindow(title);      // Create window with given title
 	applyWindowMode(windowMode);             // Put into window or borderless or full screen
-	
+
 	glutDisplayFunc(displayCllbck);     // Register callback handler for window re-draw
 	glutReshapeFunc(reshapeCllbck);     // Register callback handler for window re-shape
-	
+
 	glutTimerFunc(0, LOOP, 0);   // First timer called immediately
-	
+
 	glutSpecialFunc(specialKeyEvent); // Register callback handler for special-key event
 	glutKeyboardFunc(regularKeyEvent); // Register callback handler for regular-key event
 	glutMouseFunc(mouseEvent);   // Register callback handler for mouse event
-	
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // 67.8% red, 84.7% green and 90.2
 	glClearDepth(Z_VAL_BACKGROUND);
-	
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -552,10 +553,10 @@ int main(int argc, char** argv)
 #else
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH); // Disable double buffered mode
 #endif
-	
+
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
 
-	
+
 	vector<Pos> xd = interpolate(player.posBLrel(), player.posBRrel(), 3);
 	cout << "Pos interpolation test: " << endl;
 	for (Pos& x : xd)
@@ -571,6 +572,14 @@ int main(int argc, char** argv)
 	for (BlkCrd& t : test)
 		cout << t << '\t';
 	cout << endl;
+
+	cout << "Perlin test: " << endl;
+	const siv::PerlinNoise perlin;
+	for (size_t i = 0; i <= 10; ++i)
+		cout << perlin.octave1D(float(i)/100, 1) << endl;
+	const siv::PerlinNoise perlin2;
+	for (size_t i = 0; i <= 10; ++i)
+		cout << perlin2.octave1D(float(i) / 100, 1) << endl;
 
 	glutMainLoop();               // Enter event-processing loop
 	

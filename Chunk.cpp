@@ -57,7 +57,7 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 #if CONSOLE_LOG_CHUNKS
 		std::cout << "Chunk:: file " << _Xpos << " doesnt exist" << std::endl;
 #endif
-		flatFill();
+		fill();
 	}
 }
 
@@ -87,6 +87,10 @@ void setColor(uint block)
 
 	case 6:
 		glColor4f(0.2f, 0.2f, 0.2f, 1.0f);
+		break;
+
+	case 8:
+		glColor4f(0.0f, 0.02f, 1.0f, 0.75f);
 		break;
 
 	default:
@@ -222,7 +226,12 @@ bool Chunk::save() const
 	return true;
 }
 
-void Chunk::test()
+void Chunk::fill()
+{
+	perlinFill();
+}
+
+void Chunk::testFill()
 {
 	uint xd = 0;
 	for (Block& block : blocks)
@@ -253,6 +262,36 @@ void Chunk::flatFill()
 			blocks[lev * CHUNK_WIDTH + x] = Block(0);
 
 }
+
+void Chunk::perlinFill()
+{
+	const siv::PerlinNoise perlin;
+	double freq = 0.01;
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+	{
+		BlkCrd heightAtX = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 12) * WATER_LEVEL * 0.7 + WATER_LEVEL * 1.1;
+		for (BlkCrd y = 0; y <= heightAtX; ++y)
+		{
+			blocks[y * CHUNK_WIDTH + x] = Block(1);
+		}
+		blocks[heightAtX * CHUNK_WIDTH + x] = Block(2);
+
+
+	}
+
+	// water fill
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+	{
+		for (BlkCrd y = 0; y <= WATER_LEVEL; ++y)
+		{
+			if (blocks[y * CHUNK_WIDTH + x].ID == 0)
+				blocks[y * CHUNK_WIDTH + x] = Block(8);
+		}
+	}
+
+}
+
+
 
 Block Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
 {
