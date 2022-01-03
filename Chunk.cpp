@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <fstream>
 //#include <string>
 #include <iostream>
@@ -71,29 +72,41 @@ Chunk::~Chunk()
 }
 
 
+//static float blockColors[] = {
+//	1.0f,      0.0f,      1.0f,       1.0f,
+//	0.5f,      0.5f,      0.5f,       1.0f,
+//	0.545098f, 0.270588f, 0.0745098f, 1.0f,
+//	0.0f,      0.0f,      0.0f,       0.0f,
+//};
+
+
 void setColor(uint block)
 {
 	switch (block)
 	{
-	case 1:
+	case 1: //stone
 		glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
 		break;
-	case 2:
+	case 2: // dirt
 		glColor4f(0.545098f, 0.270588f, 0.0745098f, 1.0f);
 		break;
-	case 3:
+	case 3: // grass
 		glColor4f(0.0f, 0.5f, 0.0f, 1.0f);
 		break;
 
-	case 6:
+	case 6: // bedrock
 		glColor4f(0.2f, 0.2f, 0.2f, 1.0f);
 		break;
 
-	case 8:
+	case 8: // water
 		glColor4f(0.0f, 0.02f, 1.0f, 0.75f);
 		break;
 
-	default:
+	case 10: // sand
+		glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
+		break;
+
+	default: // error
 		glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
 		break;
 	}
@@ -269,23 +282,33 @@ void Chunk::perlinFill()
 	double freq = 0.01;
 	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
 	{
-		BlkCrd heightAtX = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 12) * WATER_LEVEL * 0.7 + WATER_LEVEL * 1.1;
-		for (BlkCrd y = 0; y <= heightAtX; ++y)
+		float perl = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 5, 0.1) * WATER_LEVEL * 1.0 + WATER_LEVEL * 1.2;
+
+		BlkCrd Ymax = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT-1);
+
+		for (BlkCrd y = 0; y <= Ymax; ++y)
 		{
 			blocks[y * CHUNK_WIDTH + x] = Block(1);
 		}
-		blocks[heightAtX * CHUNK_WIDTH + x] = Block(2);
+		if (Ymax > 0)
+			blocks[Ymax * CHUNK_WIDTH + x] = Block(3);
+		if (--Ymax > 0)
+			blocks[Ymax * CHUNK_WIDTH + x] = Block(2);
+		if (--Ymax > 0)
+			blocks[Ymax * CHUNK_WIDTH + x] = Block(2);
 
 
 	}
 
-	// water fill
+	// fill all holes with water
 	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
 	{
-		for (BlkCrd y = 0; y <= WATER_LEVEL; ++y)
+		for (BlkCrd y = WATER_LEVEL; y > 0; --y)
 		{
 			if (blocks[y * CHUNK_WIDTH + x].ID == 0)
 				blocks[y * CHUNK_WIDTH + x] = Block(8);
+			else
+				break;
 		}
 	}
 

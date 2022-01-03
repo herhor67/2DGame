@@ -176,7 +176,7 @@ struct Environments
 
 
 /* Called back when timer expired */
-void LOOP(int value)
+void LOOP(/*int value*/)
 {
 	// Debug
 #if CONSOLE_LOG_CALLBACKS
@@ -198,7 +198,7 @@ void LOOP(int value)
 	
 	chunkManager.updateTnow(Tnow);
 	
-	glutTimerFunc(refreshMills, LOOP, 0);
+//	glutTimerFunc(refreshMills, LOOP, 0);
 	// /Time management
 
 	player.env = Environments::midair;
@@ -262,10 +262,13 @@ void LOOP(int value)
 //	paused = true;
 
 	// Post re-paint request
-	glutPostRedisplay();
+//	glutPostRedisplay();
 }
 
-
+void idleCllbck()
+{
+	glutPostRedisplay();
+}
 
 void displayCllbck()
 {
@@ -274,6 +277,7 @@ void displayCllbck()
 #endif
 	++frameCount;
 
+	LOOP();
 
 	// I should make some players first perhaps
 	// now just let's load and draw chunks at camera
@@ -533,8 +537,9 @@ int main(int argc, char** argv)
 
 	glutDisplayFunc(displayCllbck);     // Register callback handler for window re-draw
 	glutReshapeFunc(reshapeCllbck);     // Register callback handler for window re-shape
+	glutIdleFunc(idleCllbck);
 
-	glutTimerFunc(0, LOOP, 0);   // First timer called immediately
+//	glutTimerFunc(0, LOOP, 0);   // First timer called immediately
 
 	glutSpecialFunc(specialKeyEvent); // Register callback handler for special-key event
 	glutKeyboardFunc(regularKeyEvent); // Register callback handler for regular-key event
