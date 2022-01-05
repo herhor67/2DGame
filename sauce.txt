@@ -1,1 +1,3 @@
 https://www3.ntu.edu.sg/home/ehchua/programming/opengl/cg_introduction.html
+
+https://www.cs.utexas.edu/~theshark/courses/cs354/lectures/cs354-21.pdf

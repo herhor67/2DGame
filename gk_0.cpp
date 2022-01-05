@@ -514,7 +514,7 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-	player.pos = { 3.75f, 8.0f };
+	player.pos = { 0.0f, 100-10.0f };
 	/*
 	{
 		Chunk ch(0);

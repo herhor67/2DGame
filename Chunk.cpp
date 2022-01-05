@@ -1,3 +1,4 @@
+#define NOMINMAX 1
 
 #include <algorithm>
 #include <fstream>
@@ -101,9 +102,12 @@ void setColor(uint block)
 	case 8: // water
 		glColor4f(0.0f, 0.02f, 1.0f, 0.75f);
 		break;
+	case 9: // lava
+		glColor4f(1.0f, 0.2f, 0.2f, 0.75f);
+		break;
 
 	case 10: // sand
-		glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
+		glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
 		break;
 
 	default: // error
@@ -280,37 +284,76 @@ void Chunk::perlinFill()
 {
 	const siv::PerlinNoise perlin;
 	double freq = 0.01;
-	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+
+	// generate terrain height
+	std::array<BlkCrd, CHUNK_WIDTH> Ymax{};
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 	{
-		float perl = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 5, 0.1) * WATER_LEVEL * 1.0 + WATER_LEVEL * 1.2;
-
-		BlkCrd Ymax = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT-1);
-
-		for (BlkCrd y = 0; y <= Ymax; ++y)
-		{
-			blocks[y * CHUNK_WIDTH + x] = Block(1);
-		}
-		if (Ymax > 0)
-			blocks[Ymax * CHUNK_WIDTH + x] = Block(3);
-		if (--Ymax > 0)
-			blocks[Ymax * CHUNK_WIDTH + x] = Block(2);
-		if (--Ymax > 0)
-			blocks[Ymax * CHUNK_WIDTH + x] = Block(2);
-
-
+		float perl = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 5, 0.4) * WATER_LEVEL * 0.7 + WATER_LEVEL * 1.2;
+		Ymax[x] = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT - 1);
 	}
 
-	// fill all holes with water
-	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+	// generate terrain caves
+	const float shape = 0.01;
+	const double max = 0.1;
+	std::array<bool, CHUNK_BLOCKNUM> caves{};
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+		for (BlkCrd y = 0; y < Ymax[x]; ++y)
+		{
+//			float perl = 1 - abs(perlin.noise2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2));
+//			perl *= std::clamp(std::min(y * 0.2, (Ymax[x] - y) * 0.05), 0.0, 1.0);
+//			caves[y * CHUNK_WIDTH + x] = perl > (1 - 0.05);
+			float perl = abs(perlin.octave2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2, 3, 0.7));
+			perl += max - std::clamp(std::min(y * 0.05, (Ymax[x] - y+2) * 0.05), max/2, max);
+			caves[y * CHUNK_WIDTH + x] = perl < 0.05;
+		}
+
+	// fill world with stone, from Y0 to Ymax, except caves
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
+			if (!caves[y * CHUNK_WIDTH + x])
+				blocks[y * CHUNK_WIDTH + x] = Block(1);
+
+
+
+	// replace top with grass and dirt
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 	{
-		for (BlkCrd y = WATER_LEVEL; y > 0; --y)
+		if (Ymax[x] >= WATER_LEVEL && blocks[(Ymax[x]) * CHUNK_WIDTH + x].ID != 0)
+			blocks[Ymax[x] * CHUNK_WIDTH + x] = Block(3);
+		if (Ymax[x] - 1 >= WATER_LEVEL && blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x] = Block(2);
+		if (Ymax[x] - 2 >= WATER_LEVEL && blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x] = Block(2);
+		if (Ymax[x] - 3 >= WATER_LEVEL && blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x] = Block(2);
+	}
+
+
+	// fill terrain holes with water
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+		if (Ymax[x] <= WATER_LEVEL)
+			for (BlkCrd y = WATER_LEVEL; y > 0; --y)
+			{
+				if (blocks[y * CHUNK_WIDTH + x].ID == 0)
+					blocks[y * CHUNK_WIDTH + x] = Block(8);
+				else
+					break;
+			}
+
+	// fill cave holes with lava
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+		for (BlkCrd y = 0; y <= LAVA_LEVEL; ++y)
 		{
 			if (blocks[y * CHUNK_WIDTH + x].ID == 0)
-				blocks[y * CHUNK_WIDTH + x] = Block(8);
-			else
-				break;
+				blocks[y * CHUNK_WIDTH + x] = Block(9);
 		}
-	}
+	
+
+	//for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+	//	for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
+	//		if (caves[y * CHUNK_WIDTH + x])
+	//			blocks[y * CHUNK_WIDTH + x] = Block(10);
 
 }
 
