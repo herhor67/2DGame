@@ -1,6 +1,8 @@
 #define NOMINMAX 1
+#define _USE_MATH_DEFINES 1
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 //#include <string>
 #include <iostream>
@@ -11,6 +13,48 @@
 
 #include "Chunk.h"
 
+
+
+template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
+constexpr auto generate_vertices()
+{
+	std::array<GLfloat, (H + 1) * (W + 1) * 3> points{ };
+
+	size_t i = 0;
+	for (BlkCrd y = 0; y <= H; ++y)
+	{
+		for (BlkCrd x = 0; x <= W; ++x)
+		{
+			points[i++] = x;
+			points[i++] = y;
+		}
+	}
+	return points;
+}
+
+template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
+constexpr auto generate_faces()
+{
+	std::array<GLushort, H * W * 4> points{ }; // GLubyte, GLushort, GLuint
+
+	size_t i = 0;
+	for (BlkCrd y = 0; y < H; ++y)
+	{
+		for (BlkCrd x = 0; x < W; ++x)
+		{
+			points[i++] = y       * (W + 1) + x;
+			points[i++] = y       * (W + 1) + x + 1;
+			points[i++] = (y + 1) * (W + 1) + x + 1;
+			points[i++] = (y + 1) * (W + 1) + x;
+		}
+	}
+	return points;
+}
+
+static constexpr auto pointsArr = generate_vertices<>();
+static constexpr auto pointsPtr = pointsArr.data();
+static constexpr auto facesArr = generate_faces<>();
+static constexpr auto facesPtr = facesArr.data();
 
 
 Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
@@ -73,12 +117,22 @@ Chunk::~Chunk()
 }
 
 
-//static float blockColors[] = {
-//	1.0f,      0.0f,      1.0f,       1.0f,
-//	0.5f,      0.5f,      0.5f,       1.0f,
-//	0.545098f, 0.270588f, 0.0745098f, 1.0f,
-//	0.0f,      0.0f,      0.0f,       0.0f,
-//};
+static float blockColors[][4] = {
+	0.0f,      0.0f,      0.0f,       0.0f, // air
+	0.5f,      0.5f,      0.5f,       1.0f, // stone
+	0.545098f, 0.270588f, 0.0745098f, 1.0f, // dirt
+	0.0f,      0.5f,      0.0f,       1.0f, // grass
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.2f,      0.2f,      0.2f,       1.0f, // bedrock
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.02f,     1.0f,       0.75f, // water
+	1.0f,      0.2f,      0.2f,       0.75f, // lava
+	1.0f,      1.0f,      0.0f,       1.0f, // sand
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+};
 
 
 void setColor(uint block)
@@ -117,6 +171,65 @@ void setColor(uint block)
 }
 
 
+void Chunk::draw() const
+{
+	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
+	glLoadIdentity();               // Reset the model-view matrix
+	glPushMatrix();                     // Save model-view matrix setting
+	glTranslatef(Xpos * CHUNK_WIDTH, 0.0f, Z_VAL_TERRAIN);    // Translate
+
+#if DRAW_FACES
+	{
+		GLfloat colors[CHUNK_VERTNUM*4] = {};
+		size_t i = 0;
+		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
+		{
+			for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+			{
+//				std::cout << i << ' ';
+				size_t pos = y * CHUNK_WIDTH + x;
+//				std::cout << pos << ' ';
+				uint id = blocks[pos].ID;
+//				std::cout << id << ' ';
+				memcpy(&colors[i], &blockColors[id][0], 4 * sizeof(float));
+				i += 4;
+//				std::cout << std::endl;
+			}
+			i += 4;
+		}
+		setColor(0);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glVertexPointer(2, GL_FLOAT, 0, pointsPtr);
+		glColorPointer(4, GL_FLOAT, 0, &colors);
+
+		glDrawElements(GL_QUADS, CHUNK_BLOCKNUM*4, GL_UNSIGNED_SHORT, facesPtr); // GL_UNSIGNED_SHORT, GL_UNSIGNED_INT
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+	}
+
+#endif
+#if DRAW_BORDERS
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2, GL_FLOAT, 0, pointsPtr);
+
+		glDrawElements(GL_QUADS, CHUNK_BLOCKNUM*4, GL_UNSIGNED_SHORT, facesPtr);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+#endif
+	glPopMatrix();                      // Restore the model-view matrix
+}
+
+/*
 void Chunk::draw() const
 {
 	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
@@ -178,6 +291,7 @@ void Chunk::draw() const
 #endif
 	glPopMatrix();                      // Restore the model-view matrix
 }
+//*/
 
 
 std::string Chunk::getPath() const
@@ -283,30 +397,34 @@ void Chunk::flatFill()
 void Chunk::perlinFill()
 {
 	const siv::PerlinNoise perlin;
-	double freq = 0.01;
+	float freq = 0.01f;
 
 	// generate terrain height
 	std::array<BlkCrd, CHUNK_WIDTH> Ymax{};
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 	{
-		float perl = perlin.octave1D((x + Xpos * CHUNK_WIDTH) * freq, 5, 0.4) * WATER_LEVEL * 0.7 + WATER_LEVEL * 1.2;
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		float perl = perlin.octave1D(xPos * freq, 5, 0.4f) * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
 		Ymax[x] = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT - 1);
 	}
 
 	// generate terrain caves
-	const float shape = 0.01;
-	const double max = 0.1;
+	static const float shape = 0.01f/2;
+	const float max = 0.2f;
 	std::array<bool, CHUNK_BLOCKNUM> caves{};
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-		for (BlkCrd y = 0; y < Ymax[x]; ++y)
+	{
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
 		{
 //			float perl = 1 - abs(perlin.noise2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2));
 //			perl *= std::clamp(std::min(y * 0.2, (Ymax[x] - y) * 0.05), 0.0, 1.0);
 //			caves[y * CHUNK_WIDTH + x] = perl > (1 - 0.05);
-			float perl = abs(perlin.octave2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2, 3, 0.7));
-			perl += max - std::clamp(std::min(y * 0.05, (Ymax[x] - y+2) * 0.05), max/2, max);
-			caves[y * CHUNK_WIDTH + x] = perl < 0.05;
+			float perl = abs(perlin.octave2D(xPos * shape, y * shape * 2, 3, 0.7));
+			perl += max - std::clamp(std::min(y * 0.05f, (Ymax[x] - y) * 0.05f + 0.1f), 0.0f, max);
+			caves[y * CHUNK_WIDTH + x] = perl < shape * 7;
 		}
+	}
 
 	// fill world with stone, from Y0 to Ymax, except caves
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
@@ -355,6 +473,24 @@ void Chunk::perlinFill()
 	//		if (caves[y * CHUNK_WIDTH + x])
 	//			blocks[y * CHUNK_WIDTH + x] = Block(10);
 
+
+
+
+
+
+
+
+
+
+	// bedrock
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+	{
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		for (BlkCrd y = 0; y <= 3; ++y)
+//			if (y == 0 || y == (BlkCrd)(pow((((x + Xpos * CHUNK_WIDTH)) * 0.6978), M_E)) % (BlkCrd)(pow(3, y - 1) + 1))
+			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x+3) / 4 % 2 || y == 0)
+				blocks[y * CHUNK_WIDTH + x] = Block(6);
+	}
 }
 
 
