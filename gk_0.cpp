@@ -8,6 +8,7 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #define GLUT_API_VERSION 4
 #include "GL/glut.h"
+#include <FastNoise/FastNoise.h>
 
 #include "ChunkManager.h"
 #include "Entity.h"
@@ -595,7 +596,20 @@ int main(int argc, char** argv)
 	for (size_t i = 0; i <= 10; ++i)
 		cout << perlin2.octave1D(float(i) / 100, 1) << endl;
 
-//	system("PAUSE");
+	// generator test
+	cout << "Noise generator test: " << endl;
+	std::vector<float> noiseOutput(16 * 16 * 16);
+	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
+	fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, 16, 16, 16, 0.2f, 1337);
+	int index = 0;
+
+	for (int z = 0; z < 16; z++)
+		for (int y = 0; y < 16; y++)
+			for (int x = 0; x < 16; x++)
+				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
+
+	return 0;
+
 	glutMainLoop();               // Enter event-processing loop
 	
 	return 0;

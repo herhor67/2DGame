@@ -423,16 +423,26 @@ void Chunk::flatFill()
 
 void Chunk::perlinFill()
 {
+
 	const siv::PerlinNoise perlin;
 	float freq = 0.01f;
+
+	// generate noise
+	std::array<float, CHUNK_WIDTH> noise{};
+
+	auto perlinn = FastNoise::New<FastNoise::Perlin>();
+	auto generator = FastNoise::New<FastNoise::FractalFBm>();
+
+	generator->SetSource(perlinn);
+	generator->SetOctaveCount(5);
+	generator->GenUniformGrid2D(noise.data(), Xpos * CHUNK_WIDTH, 0, CHUNK_WIDTH, 1, freq, 1337);
 
 	// generate terrain height
 	std::array<BlkCrd, CHUNK_WIDTH> Ymax{};
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 	{
-		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
-		float perl = perlin.octave1D(xPos * freq, 5, 0.4f) * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
-		Ymax[x] = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT - 1);
+		float height = noise[x] * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
+		Ymax[x] = std::clamp((BlkCrd)height, 0, CHUNK_HEIGHT - 1);
 	}
 
 	// generate terrain caves
@@ -503,6 +513,101 @@ void Chunk::perlinFill()
 
 
 
+	// bedrock
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+	{
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		for (BlkCrd y = 0; y <= 3; ++y)
+//			if (y == 0 || y == (BlkCrd)(pow((((x + Xpos * CHUNK_WIDTH)) * 0.6978), M_E)) % (BlkCrd)(pow(3, y - 1) + 1))
+			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x+3) / 4 % 2 || y == 0)
+				blocks[y * CHUNK_WIDTH + x] = Block(6);
+	}
+}
+
+
+/*
+void Chunk::perlinFill()
+{
+	const siv::PerlinNoise perlin;
+	float freq = 0.01f;
+
+	// generate terrain height
+	std::array<BlkCrd, CHUNK_WIDTH> Ymax{};
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+	{
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		float perl = perlin.octave1D(xPos * freq, 5, 0.4f) * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
+		Ymax[x] = std::clamp((BlkCrd)perl, 0, CHUNK_HEIGHT - 1);
+	}
+
+	// generate terrain caves
+	static const float shape = 0.01f / 2;
+	const float max = 0.2f;
+	std::array<bool, CHUNK_BLOCKNUM> caves{};
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+	{
+		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
+		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
+		{
+			//			float perl = 1 - abs(perlin.noise2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2));
+			//			perl *= std::clamp(std::min(y * 0.2, (Ymax[x] - y) * 0.05), 0.0, 1.0);
+			//			caves[y * CHUNK_WIDTH + x] = perl > (1 - 0.05);
+			float perl = abs(perlin.octave2D(xPos * shape, y * shape * 2, 3, 0.7));
+			perl += max - std::clamp(std::min(y * 0.05f, (Ymax[x] - y) * 0.05f + 0.1f), 0.0f, max);
+			caves[y * CHUNK_WIDTH + x] = perl < shape * 7;
+		}
+	}
+
+	// fill world with stone, from Y0 to Ymax, except caves
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
+			if (!caves[y * CHUNK_WIDTH + x])
+				blocks[y * CHUNK_WIDTH + x] = Block(1);
+
+
+
+	// replace top with grass and dirt
+	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+	{
+		if (Ymax[x] >= WATER_LEVEL && blocks[(Ymax[x]) * CHUNK_WIDTH + x].ID != 0)
+			blocks[Ymax[x] * CHUNK_WIDTH + x] = Block(3);
+		if (Ymax[x] - 1 >= WATER_LEVEL && blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x] = Block(2);
+		if (Ymax[x] - 2 >= WATER_LEVEL && blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x] = Block(2);
+		if (Ymax[x] - 3 >= WATER_LEVEL && blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x].ID != 0)
+			blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x] = Block(2);
+	}
+
+
+	// fill terrain holes with water
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+		if (Ymax[x] <= WATER_LEVEL)
+			for (BlkCrd y = WATER_LEVEL; y > 0; --y)
+			{
+				if (blocks[y * CHUNK_WIDTH + x].ID == 0)
+					blocks[y * CHUNK_WIDTH + x] = Block(8);
+				else
+					break;
+			}
+
+	// fill cave holes with lava
+	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
+		for (BlkCrd y = 0; y <= LAVA_LEVEL; ++y)
+		{
+			if (blocks[y * CHUNK_WIDTH + x].ID == 0)
+				blocks[y * CHUNK_WIDTH + x] = Block(9);
+		}
+
+
+	//for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
+	//	for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
+	//		if (caves[y * CHUNK_WIDTH + x])
+	//			blocks[y * CHUNK_WIDTH + x] = Block(10);
+
+
+
+
 
 
 
@@ -514,11 +619,12 @@ void Chunk::perlinFill()
 	{
 		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
 		for (BlkCrd y = 0; y <= 3; ++y)
-//			if (y == 0 || y == (BlkCrd)(pow((((x + Xpos * CHUNK_WIDTH)) * 0.6978), M_E)) % (BlkCrd)(pow(3, y - 1) + 1))
-			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x+3) / 4 % 2 || y == 0)
+			//			if (y == 0 || y == (BlkCrd)(pow((((x + Xpos * CHUNK_WIDTH)) * 0.6978), M_E)) % (BlkCrd)(pow(3, y - 1) + 1))
+			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x + 3) / 4 % 2 || y == 0)
 				blocks[y * CHUNK_WIDTH + x] = Block(6);
 	}
 }
+//*/
 
 
 
