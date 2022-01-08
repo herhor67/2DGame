@@ -10,4 +10,4 @@ typedef int    ChkCrd; // Chunk Coordinate Type
 
 typedef float TDT; // Time Difference Type
 
-
+typedef unsigned char ClrT;

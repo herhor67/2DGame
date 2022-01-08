@@ -142,7 +142,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 
 				if (blk.ID != 0)
 				{
-					Pos blkPos = { blkX, blkY };
+					const Pos blkPos = { blkX, blkY };
 
 //					std::cout << "Checking block: X: " << blkX << " Y: " << blkY << std::endl;
 //					std::cout << "Top layer: " << blkY + blk.boxTrel() << " bounded: (" << blkX + blk.boxLrel() << ", " << blkX + blk.boxRrel() << ") " << std::endl;
@@ -212,7 +212,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 
 				if (blk.ID != 0)
 				{
-					Pos blkPos = { blkX, blkY };
+					const Pos blkPos = { blkX, blkY };
 
 					for (const Pos& chkPt : checkPts)
 					{
@@ -281,7 +281,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 
 				if (blk.ID != 0)
 				{
-					Pos blkPos = { blkX, blkY };
+					const Pos blkPos = { blkX, blkY };
 
 //					std::cout << "Checking block: X: " << blkX << " Y: " << blkY << std::endl;
 
@@ -350,7 +350,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 
 				if (blk.ID != 0)
 				{
-					Pos blkPos = { blkX, blkY };
+					const Pos blkPos = { blkX, blkY };
 
 //					std::cout << "Checking block: X: " << blkX << " Y: " << blkY << std::endl;
 

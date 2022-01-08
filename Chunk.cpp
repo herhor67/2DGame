@@ -10,9 +10,28 @@
 #include "Filesystem.h"
 
 #include "GL/glut.h"
+#include <FastNoise/FastNoise.h>
 
 #include "Chunk.h"
 
+
+//static constexpr GLfloat blockColorsFloat[][4] = {
+static constexpr GLfloat blockColorsFloat[] = {
+	0.0f,      0.0f,      0.0f,       0.0f, // air
+	0.5f,      0.5f,      0.5f,       1.0f, // stone
+	0.545098f, 0.270588f, 0.0745098f, 1.0f, // dirt
+	0.0f,      0.5f,      0.0f,       1.0f, // grass
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.2f,      0.2f,      0.2f,       1.0f, // bedrock
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.02f,     1.0f,       0.75f, // water
+	1.0f,      0.2f,      0.2f,       0.75f, // lava
+	1.0f,      1.0f,      0.0f,       1.0f, // sand
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+	0.0f,      0.0f,      0.0f,       1.0f,
+};
 
 
 template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
@@ -35,12 +54,13 @@ constexpr auto generate_vertices()
 template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
 constexpr auto generate_faces()
 {
-	std::array<GLushort, H * W * 4> points{ }; // GLubyte, GLushort, GLuint
+	typedef GLushort DtTp;
+	std::array<DtTp, H * W * 4> points{ }; // GLubyte, GLushort, GLuint
 
 	size_t i = 0;
-	for (BlkCrd y = 0; y < H; ++y)
+	for (DtTp y = 0; y < H; ++y)
 	{
-		for (BlkCrd x = 0; x < W; ++x)
+		for (DtTp x = 0; x < W; ++x)
 		{
 			points[i++] = y       * (W + 1) + x;
 			points[i++] = y       * (W + 1) + x + 1;
@@ -51,10 +71,26 @@ constexpr auto generate_faces()
 	return points;
 }
 
+template<typename T>
+constexpr auto generate_colors()
+{
+	std::array<T, sizeof(blockColorsFloat)/sizeof(GLfloat)> colors{ };
+
+	for (size_t i = 0; i < colors.size(); ++i)
+	{
+//		colors[i] = std::clamp(blockColorsFloat[i / 4][i % 4] * (std::numeric_limits<T>::max() + 1), 0.0f, (float)std::numeric_limits<T>::max());
+		colors[i] = std::clamp(blockColorsFloat[i] * (std::numeric_limits<T>::max() + 1), 0.0f, (float)std::numeric_limits<T>::max());
+	}
+	return colors;
+}
+
 static constexpr auto pointsArr = generate_vertices<>();
 static constexpr auto pointsPtr = pointsArr.data();
+
 static constexpr auto facesArr = generate_faces<>();
 static constexpr auto facesPtr = facesArr.data();
+
+static constexpr auto colorsArr = generate_colors<ClrT>();
 
 
 Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
@@ -117,23 +153,6 @@ Chunk::~Chunk()
 }
 
 
-static float blockColors[][4] = {
-	0.0f,      0.0f,      0.0f,       0.0f, // air
-	0.5f,      0.5f,      0.5f,       1.0f, // stone
-	0.545098f, 0.270588f, 0.0745098f, 1.0f, // dirt
-	0.0f,      0.5f,      0.0f,       1.0f, // grass
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.2f,      0.2f,      0.2f,       1.0f, // bedrock
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.02f,     1.0f,       0.75f, // water
-	1.0f,      0.2f,      0.2f,       0.75f, // lava
-	1.0f,      1.0f,      0.0f,       1.0f, // sand
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-};
-
 
 void setColor(uint block)
 {
@@ -173,6 +192,8 @@ void setColor(uint block)
 
 void Chunk::draw() const
 {
+	glShadeModel(GL_FLAT);
+
 	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
 	glLoadIdentity();               // Reset the model-view matrix
 	glPushMatrix();                     // Save model-view matrix setting
@@ -180,20 +201,22 @@ void Chunk::draw() const
 
 #if DRAW_FACES
 	{
+#if CLR_NO_FLOAT
+		ClrT colors[CHUNK_VERTNUM*4] = {};
+#else
 		GLfloat colors[CHUNK_VERTNUM*4] = {};
+#endif
 		size_t i = 0;
 		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
 		{
 			for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 			{
-//				std::cout << i << ' ';
-				size_t pos = y * CHUNK_WIDTH + x;
-//				std::cout << pos << ' ';
-				uint id = blocks[pos].ID;
-//				std::cout << id << ' ';
-				memcpy(&colors[i], &blockColors[id][0], 4 * sizeof(float));
+#if CLR_NO_FLOAT
+				memcpy(&colors[i], &colorsArr[blocks[y * CHUNK_WIDTH + x].ID * 4], 4 * sizeof(ClrT));
+#else
+				memcpy(&colors[i], &blockColorsFloat[blocks[y * CHUNK_WIDTH + x].ID * 4], 4 * sizeof(GLfloat));
+#endif
 				i += 4;
-//				std::cout << std::endl;
 			}
 			i += 4;
 		}
@@ -204,7 +227,11 @@ void Chunk::draw() const
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, pointsPtr);
+#if CLR_NO_FLOAT
+		glColorPointer(4, GL_UNSIGNED_BYTE, 0, &colors);
+#else
 		glColorPointer(4, GL_FLOAT, 0, &colors);
+#endif
 
 		glDrawElements(GL_QUADS, CHUNK_BLOCKNUM*4, GL_UNSIGNED_SHORT, facesPtr); // GL_UNSIGNED_SHORT, GL_UNSIGNED_INT
 

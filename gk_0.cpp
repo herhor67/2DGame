@@ -211,7 +211,9 @@ void LOOP(/*int value*/)
 		TDT sumExecutedTime = 0.0f;
 		TDT currExecutedTime = 0.0f;
 //		float fractionExecuted;
+#if CONSOLE_LOG_MOVEMENT
 		cout << "Starting movement:" << endl;
+#endif
 		
 		int side = SIDE_NONE;
 		
@@ -222,7 +224,10 @@ void LOOP(/*int value*/)
 			auto collisionParams = chunkManager.checkCollision(movement, player); //std::tuple<Pos, Block, Block, int, float>
 
 			float fractionExecuted = std::get<4>(collisionParams);
+
+#if CONSOLE_LOG_MOVEMENT
 			cout << "Fraction: " << fractionExecuted << endl;
+#endif
 
 			currExecutedTime = fractionExecuted * remainingTime;
 
@@ -256,7 +261,9 @@ void LOOP(/*int value*/)
 
 		player.env = Environments::midair;
 
+#if CONSOLE_LOG_MOVEMENT
 		cout << "Finished movement" << endl << endl << endl;
+#endif
 	}
 
 //	paused = true;
@@ -475,16 +482,16 @@ void regularKeyEvent(unsigned char key, int x, int y)
 //*/
 //*/
 	case 'W':
-		player.vel.Y = 50.0f;
+		player.vel.Y += 40.0f;
 		break;
 	case 'S':
-		player.vel.Y = -30.0f;
+		player.vel.Y += -40.0f;
 		break;
 	case 'A':
-		player.vel.X = -40.0f*4;
+		player.vel.X += -40.0f * 4;
 		break;
 	case 'D':
-		player.vel.X = 40.0f * 4;
+		player.vel.X += 40.0f * 4;
 		break;
 	case ' ':
 		paused = !paused;
@@ -588,6 +595,7 @@ int main(int argc, char** argv)
 	for (size_t i = 0; i <= 10; ++i)
 		cout << perlin2.octave1D(float(i) / 100, 1) << endl;
 
+//	system("PAUSE");
 	glutMainLoop();               // Enter event-processing loop
 	
 	return 0;

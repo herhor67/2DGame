@@ -228,7 +228,7 @@ Pos Entity::posBRabs() const
 }
 
 
-Player::Player() : Entity(75.0f, 1.8f, 0.5f)
+Player::Player() : Entity(75.0f, 2.0f, 1.0f)//Entity(75.0f, 1.8f, 0.5f)
 {
 }
 
