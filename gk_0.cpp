@@ -598,13 +598,13 @@ int main(int argc, char** argv)
 
 	// generator test
 	cout << "Noise generator test: " << endl;
-	std::vector<float> noiseOutput(16 * 16 * 16);
-	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
-	fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, 16, 16, 16, 0.2f, 1337);
+	std::vector<float> noiseOutput(3*3*2);
+	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
+ 	fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 3, 3, 0.2f, 1337);
 	int index = 0;
 
 	for (int z = 0; z < 3; z++)
-		for (int y = 0; y < 2; y++)
+		for (int y = 0; y < 3; y++)
 			for (int x = 0; x < 1; x++)
 				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
 
