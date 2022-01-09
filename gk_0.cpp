@@ -603,12 +603,11 @@ int main(int argc, char** argv)
 	fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, 16, 16, 16, 0.2f, 1337);
 	int index = 0;
 
-	for (int z = 0; z < 16; z++)
-		for (int y = 0; y < 16; y++)
-			for (int x = 0; x < 16; x++)
+	for (int z = 0; z < 3; z++)
+		for (int y = 0; y < 2; y++)
+			for (int x = 0; x < 1; x++)
 				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
 
-	return 0;
 
 	glutMainLoop();               // Enter event-processing loop
 	
