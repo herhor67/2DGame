@@ -118,19 +118,23 @@ Movement Entity::tryMovement(TDT Tdiff, int side)
 
 Pos Entity::getNewPos(TDT Tdiff, int side, bool write)
 {
-	Frc F;
-	F.X = -sgn(vel.X) * pow(env.vel.X - vel.X, 2) * width * height * env.res.X;
-	F.Y = -sgn(vel.Y) * pow(env.vel.Y - vel.Y, 2) * width * width  * env.res.Y;
-
 	Acc A = acc;
 	Vel V = vel;
 	Pos P = pos;
 
+#if ENV_INTERACTION
+	Frc F;
+	F.X = -sgn(vel.X) * pow(env.vel.X - vel.X, 2) * width * height * env.res.X;
+	F.Y = -sgn(vel.Y) * pow(env.vel.Y - vel.Y, 2) * width * width  * env.res.Y;
 	A.X = F.X / mass;
 	A.Y = F.Y / mass;
 
-	V.X += (A.X + env.acc.X) * Tdiff;
-	V.Y += (A.Y + env.acc.Y) * Tdiff;
+	V.X += env.acc.X * Tdiff;
+	V.Y += env.acc.Y * Tdiff;
+#endif
+	
+	V.X += A.X * Tdiff;
+	V.Y += A.Y * Tdiff;
 
 	P.X += V.X * Tdiff;
 	P.Y += V.Y * Tdiff;

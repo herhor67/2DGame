@@ -91,6 +91,7 @@ Block ChunkManager::getBlockAt(BlkCrd x, BlkCrd y)
 
 std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Movement& movement, const Entity& entity)
 {
+
 	EntCrd dX = movement.second.X - movement.first.X;
 	EntCrd dY = movement.second.Y - movement.first.Y;
 	
@@ -105,6 +106,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 	EntCrd maxDistSq_X = maxDistSq;
 	EntCrd maxDistSq_Y = maxDistSq;
 
+#if ENV_COLLISIONS
 //	std::cout << "Expected dist: X: " << dX << " Y: " << dY << " Total: " << sqrt(maxDistSq) << std::endl;
 
 	//*
@@ -388,6 +390,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 //	std::cout << "maxDist_X: " << sqrt(maxDistSq_X) << std::endl;
 //	std::cout << "maxDist_Y: " << sqrt(maxDistSq_Y) << std::endl;
 
+#endif
 	
 	EntCrd ratio = 1;
 	

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <map>
+#include <unordered_set>
 #include <vector>
 
 #include "defines.h"
@@ -35,4 +37,23 @@ template <typename T> std::vector<T> interpolate(T v1, T v2, size_t count)
 	temp[count] = v2;
 	
 	return temp;
+}
+
+
+template <typename T, size_t N>
+std::unordered_set<T> get_unique(std::array<T, N> vec)
+{
+	std::unordered_set<T> s;
+	for (const T &i : vec)
+		s.insert(i);
+	return s;
+}
+
+template <typename T, size_t N>
+std::map<T, size_t> get_unique_counts(std::array<T, N> vec)
+{
+	std::map<T, size_t> m;
+	for (const T& i : vec)
+		++m[i];
+	return m;
 }

@@ -146,7 +146,7 @@ enum ScreenModes { windowed = -1, borderless, fullscreen };
 int windowMode = windowed; // Full-screen or windowed mode?
 
 
-bool paused = true;
+bool paused = false;
 bool debugMenu = true;
 
 int fps = 0;
@@ -168,8 +168,8 @@ struct Environments
 {
 	static constexpr Environment test = { {0, 0}, {-ENV_GRAVITY, 0}, {1.0f, 1.0f} };
 
-//	static constexpr Environment midair   = { {0, 0}, {0, ENV_GRAVITY}, {1.0f, 1.0f} };
-	static constexpr Environment midair   = { {0, 0}, {0, 0}, {0, 0} };
+	static constexpr Environment midair   = { {0, 0}, {0, ENV_GRAVITY}, {1.0f, 1.0f} };
+//	static constexpr Environment midair   = { {0, 0}, {0, 0}, {0, 0} };
 	static constexpr Environment standing = { {0, 0}, {0, ENV_GRAVITY}, {300.0f, 1.0f} };
 };
 
@@ -206,12 +206,10 @@ void LOOP(/*int value*/)
 
 	if (!paused)
 	{
-		// we should really make some movement here...
-
 		TDT remainingTime = Tdiff;
 		TDT sumExecutedTime = 0.0f;
 		TDT currExecutedTime = 0.0f;
-//		float fractionExecuted;
+
 #if CONSOLE_LOG_MOVEMENT
 		cout << "Starting movement:" << endl;
 #endif
@@ -600,13 +598,19 @@ int main(int argc, char** argv)
 	cout << "Noise generator test: " << endl;
 	std::vector<float> noiseOutput(3*3*2);
 	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
- 	fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 3, 3, 0.2f, 1337);
+ 	fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 4, 2, 0.2f, 1337);
 	int index = 0;
 
-	for (int z = 0; z < 3; z++)
-		for (int y = 0; y < 3; y++)
-			for (int x = 0; x < 1; x++)
-				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
+//	for (int z = 0; z < 3; z++)
+//		for (int y = 0; y < 3; y++)
+//			for (int x = 0; x < 1; x++)
+//				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
+	for (const float xd : noiseOutput)
+	{
+		cout << xd << endl;
+		if (xd == 0)
+			break;
+	}
 
 
 	glutMainLoop();               // Enter event-processing loop

@@ -1,95 +1,18 @@
-#define NOMINMAX 1
-#define _USE_MATH_DEFINES 1
 
-#include <algorithm>
-#include <cmath>
 #include <fstream>
-//#include <string>
 #include <iostream>
-//#include <iterator>
 #include "Filesystem.h"
 
-#include "GL/glut.h"
-#include <FastNoise/FastNoise.h>
+#include "functions.h"
 
 #include "Chunk.h"
 
-
-//static constexpr GLfloat blockColorsFloat[][4] = {
-static constexpr GLfloat blockColorsFloat[] = {
-	0.0f,      0.0f,      0.0f,       0.0f, // air
-	0.5f,      0.5f,      0.5f,       1.0f, // stone
-	0.545098f, 0.270588f, 0.0745098f, 1.0f, // dirt
-	0.0f,      0.5f,      0.0f,       1.0f, // grass
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.2f,      0.2f,      0.2f,       1.0f, // bedrock
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.02f,     1.0f,       0.75f, // water
-	1.0f,      0.2f,      0.2f,       0.75f, // lava
-	1.0f,      1.0f,      0.0f,       1.0f, // sand
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-	0.0f,      0.0f,      0.0f,       1.0f,
-};
-
-
-template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
-constexpr auto generate_vertices()
-{
-	std::array<GLfloat, (H + 1) * (W + 1) * 3> points{ };
-
-	size_t i = 0;
-	for (BlkCrd y = 0; y <= H; ++y)
-	{
-		for (BlkCrd x = 0; x <= W; ++x)
-		{
-			points[i++] = x;
-			points[i++] = y;
-		}
-	}
-	return points;
-}
-
-template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
-constexpr auto generate_faces()
-{
-	typedef GLushort DtTp;
-	std::array<DtTp, H * W * 4> points{ }; // GLubyte, GLushort, GLuint
-
-	size_t i = 0;
-	for (DtTp y = 0; y < H; ++y)
-	{
-		for (DtTp x = 0; x < W; ++x)
-		{
-			points[i++] = y       * (W + 1) + x;
-			points[i++] = y       * (W + 1) + x + 1;
-			points[i++] = (y + 1) * (W + 1) + x + 1;
-			points[i++] = (y + 1) * (W + 1) + x;
-		}
-	}
-	return points;
-}
-
-template<typename T>
-constexpr auto generate_colors()
-{
-	std::array<T, sizeof(blockColorsFloat)/sizeof(GLfloat)> colors{ };
-
-	for (size_t i = 0; i < colors.size(); ++i)
-	{
-//		colors[i] = std::clamp(blockColorsFloat[i / 4][i % 4] * (std::numeric_limits<T>::max() + 1), 0.0f, (float)std::numeric_limits<T>::max());
-		colors[i] = std::clamp(blockColorsFloat[i] * (std::numeric_limits<T>::max() + 1), 0.0f, (float)std::numeric_limits<T>::max());
-	}
-	return colors;
-}
+#include "Perlin.h"
 
 static constexpr auto pointsArr = generate_vertices<>();
 static constexpr auto pointsPtr = pointsArr.data();
-
 static constexpr auto facesArr = generate_faces<>();
 static constexpr auto facesPtr = facesArr.data();
-
 static constexpr auto colorsArr = generate_colors<ClrT>();
 
 
@@ -423,27 +346,21 @@ void Chunk::flatFill()
 
 void Chunk::perlinFill()
 {
-
 	const siv::PerlinNoise perlin;
 	float freq = 0.01f;
 
 	// generate noise
-	std::array<float, CHUNK_WIDTH> noise{};
+	
 
-	auto perlinn = FastNoise::New<FastNoise::Perlin>();
-	auto generator = FastNoise::New<FastNoise::FractalFBm>();
+//	auto biomeGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
 
-	generator->SetSource(perlinn);
-	generator->SetOctaveCount(5);
-	generator->GenUniformGrid2D(noise.data(), Xpos * CHUNK_WIDTH, 0, CHUNK_WIDTH, 1, freq, 1337);
+	auto biomes = get_biomes(Xpos);
 
-	// generate terrain height
-	std::array<BlkCrd, CHUNK_WIDTH> Ymax{};
-	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-	{
-		float height = noise[x] * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
-		Ymax[x] = std::clamp((BlkCrd)height, 0, CHUNK_HEIGHT - 1);
-	}
+	auto unq_cnt = get_unique_counts(biomes);
+	for (const auto& [key, value] : unq_cnt)
+		std::cout << biome_to_name(key) << " occurs " << value << " times" << std::endl;
+
+	auto Ymax = get_height_for_biome(Xpos, Biomes::Desert);
 
 	// generate terrain caves
 	static const float shape = 0.01f/2;
@@ -637,4 +554,87 @@ Block Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
 	}
 //	std::cout << "gudd";
 	return blocks.at(y * CHUNK_WIDTH + x);
+}
+
+
+
+std::array<Biomes, BIOME_WIDTH> get_biomes(ChkCrd Xpos)
+{
+	std::array<float, BIOME_WIDTH> biomeNoise{};
+	std::array<Biomes, BIOME_WIDTH> biomeTypes{};
+	
+	auto biomeGenerator = FastNoise::New<FastNoise::CellularValue>();
+	biomeGenerator->SetJitterModifier(0.7f);
+	biomeGenerator->GenUniformGrid2D(biomeNoise.data(), Xpos * CHUNK_WIDTH - BIOME_ITPL_R, 0, BIOME_WIDTH, 1, 0.01f, 123456);
+	
+	for (size_t i = 0; i < CHUNK_WIDTH + 2 * BIOME_ITPL_R; ++i)
+		biomeTypes[i] = Biomes(std::clamp(BmT(std::fabs(biomeNoise[i]) * BmT(Biomes::MAX)), 0, BmT(Biomes::MAX) - 1));
+	
+	return biomeTypes;
+}
+
+std::array<BlkCrd, BIOME_WIDTH> get_height_for_biome(ChkCrd Xpos, Biomes biome)
+{
+	switch (biome)
+	{
+	case Biomes::Polar:
+		break;
+	}
+	
+	auto perlinn = FastNoise::New<FastNoise::Perlin>();
+	auto heightGenerator = FastNoise::New<FastNoise::FractalFBm>();
+	
+	std::array<float, BIOME_WIDTH> heightNoise{};
+	heightGenerator->SetSource(FastNoise::New<FastNoise::Perlin>());
+	heightGenerator->SetOctaveCount(3);
+	heightGenerator->SetGain(0.5f);
+	heightGenerator->GenUniformGrid2D(heightNoise.data(), Xpos * CHUNK_WIDTH - BIOME_ITPL_R, 0, BIOME_WIDTH, 1, 0.01f, 123456);
+	
+	// generate terrain height
+	std::array<BlkCrd, BIOME_WIDTH> Ymax{};
+	for (BlkCrd i = 0; i < BIOME_WIDTH; ++i)
+	{
+		float height = heightNoise[i] * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
+		Ymax[i] = std::clamp((BlkCrd)height, 0, CHUNK_HEIGHT - 1);
+	}
+	return Ymax;
+}
+
+
+std::map<Biomes, std::array<BlkCrd, BIOME_WIDTH>> get_height_for_biomes(ChkCrd Xpos, std::unordered_set<Biomes> biomes)
+{
+	std::map<Biomes, std::array<BlkCrd, BIOME_WIDTH>> heights;
+
+	for (const Biomes& biome : biomes)
+		heights[biome] = get_height_for_biome(Xpos, biome);
+
+	return heights;
+}
+
+
+
+
+std::string biome_to_name(Biomes biome)
+{
+	switch (biome)
+	{
+	case Biomes::Polar:
+		return "Polar";
+	case Biomes::Taiga:
+		return "Taiga";
+	case Biomes::Ocean:
+		return "Ocean";
+	case Biomes::Plains:
+		return "Plains";
+	case Biomes::Forest:
+		return "Forest";
+	case Biomes::Rainforest:
+		return "Rainforest";
+	case Biomes::Savanna:
+		return "Savanna";
+	case Biomes::Desert:
+		return "Desert";
+	default:
+		return "Nullbiome";
+	}
 }
