@@ -3,9 +3,8 @@
 #include <iostream>
 #include "Filesystem.h"
 
-#include "functions.h"
-
 #include "Chunk.h"
+#include "TerrainGen.h"
 
 #include "Perlin.h"
 
@@ -23,7 +22,7 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 	if (fs::exists(path))
 	{
 #if CONSOLE_LOG_CHUNKS
-		std::cout << "Chunk:: reading from file " << _Xpos << std::endl;
+		std::cout << "Chunk:: reading from file " << Xpos << std::endl;
 #endif
 		std::ifstream chunkFile(path, std::ios_base::binary);
 		if (chunkFile.good())
@@ -37,16 +36,13 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 
 			for (byte bt : bytesBuffer)
 			{
-				//			std::cout << (uint)bt << ' ';
-
-							// VarInt read
+				// VarInt read
 				blockID |= bt & 127;
 				if (bt & 128)
 					blockID <<= 7;
 				else
 				{
 					blocks[pos] = Block(blockID);
-					//				std::cout << "Read: " << blockID << std::endl;
 					blockID = 0;
 
 					if (++pos == CHUNK_BLOCKNUM)
@@ -62,13 +58,15 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 #if CONSOLE_LOG_CHUNKS
 		std::cout << "Chunk:: file " << _Xpos << " doesnt exist" << std::endl;
 #endif
-		fill();
+		
+		TerrainGen generator(Xpos, blocks);
+
+		generator.fill_chunk();
+
 	}
 }
 
-Chunk::Chunk()
-{
-}
+Chunk::Chunk() {}
 
 Chunk::~Chunk()
 {
@@ -309,7 +307,7 @@ bool Chunk::save() const
 
 void Chunk::fill()
 {
-	perlinFill();
+	
 }
 
 void Chunk::testFill()
@@ -344,102 +342,6 @@ void Chunk::flatFill()
 
 }
 
-void Chunk::perlinFill()
-{
-	const siv::PerlinNoise perlin;
-	float freq = 0.01f;
-
-	// generate noise
-	
-
-//	auto biomeGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
-
-	auto biomes = get_biomes(Xpos);
-
-	auto unq_cnt = get_unique_counts(biomes);
-	for (const auto& [key, value] : unq_cnt)
-		std::cout << biome_to_name(key) << " occurs " << value << " times" << std::endl;
-
-	auto Ymax = get_height_for_biome(Xpos, Biomes::Desert);
-
-	// generate terrain caves
-	static const float shape = 0.01f/2;
-	const float max = 0.2f;
-	std::array<bool, CHUNK_BLOCKNUM> caves{};
-	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-	{
-		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
-		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
-		{
-//			float perl = 1 - abs(perlin.noise2D((x + Xpos * CHUNK_WIDTH) * shape, y * shape * 2));
-//			perl *= std::clamp(std::min(y * 0.2, (Ymax[x] - y) * 0.05), 0.0, 1.0);
-//			caves[y * CHUNK_WIDTH + x] = perl > (1 - 0.05);
-			float perl = abs(perlin.octave2D(xPos * shape, y * shape * 2, 3, 0.7));
-			perl += max - std::clamp(std::min(y * 0.05f, (Ymax[x] - y) * 0.05f + 0.1f), 0.0f, max);
-			caves[y * CHUNK_WIDTH + x] = perl < shape * 7;
-		}
-	}
-
-	// fill world with stone, from Y0 to Ymax, except caves
-	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-		for (BlkCrd y = 0; y <= Ymax[x]; ++y)
-			if (!caves[y * CHUNK_WIDTH + x])
-				blocks[y * CHUNK_WIDTH + x] = Block(1);
-
-
-
-	// replace top with grass and dirt
-	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-	{
-		if (Ymax[x] >= WATER_LEVEL && blocks[(Ymax[x]) * CHUNK_WIDTH + x].ID != 0)
-			blocks[Ymax[x] * CHUNK_WIDTH + x] = Block(3);
-		if (Ymax[x] - 1 >= WATER_LEVEL && blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x].ID != 0)
-			blocks[(Ymax[x] - 1) * CHUNK_WIDTH + x] = Block(2);
-		if (Ymax[x] - 2 >= WATER_LEVEL && blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x].ID != 0)
-			blocks[(Ymax[x] - 2) * CHUNK_WIDTH + x] = Block(2);
-		if (Ymax[x] - 3 >= WATER_LEVEL && blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x].ID != 0)
-			blocks[(Ymax[x] - 3) * CHUNK_WIDTH + x] = Block(2);
-	}
-
-
-	// fill terrain holes with water
-	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
-		if (Ymax[x] <= WATER_LEVEL)
-			for (BlkCrd y = WATER_LEVEL; y > 0; --y)
-			{
-				if (blocks[y * CHUNK_WIDTH + x].ID == 0)
-					blocks[y * CHUNK_WIDTH + x] = Block(8);
-				else
-					break;
-			}
-
-	// fill cave holes with lava
-	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
-		for (BlkCrd y = 0; y <= LAVA_LEVEL; ++y)
-		{
-			if (blocks[y * CHUNK_WIDTH + x].ID == 0)
-				blocks[y * CHUNK_WIDTH + x] = Block(9);
-		}
-	
-
-	//for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
-	//	for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
-	//		if (caves[y * CHUNK_WIDTH + x])
-	//			blocks[y * CHUNK_WIDTH + x] = Block(10);
-
-
-
-
-	// bedrock
-	for (BlkCrd x = 0; x <= CHUNK_WIDTH - 1; ++x)
-	{
-		BlkCrd xPos = x + Xpos * CHUNK_WIDTH;
-		for (BlkCrd y = 0; y <= 3; ++y)
-//			if (y == 0 || y == (BlkCrd)(pow((((x + Xpos * CHUNK_WIDTH)) * 0.6978), M_E)) % (BlkCrd)(pow(3, y - 1) + 1))
-			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x+3) / 4 % 2 || y == 0)
-				blocks[y * CHUNK_WIDTH + x] = Block(6);
-	}
-}
 
 
 /*
@@ -554,87 +456,4 @@ Block Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
 	}
 //	std::cout << "gudd";
 	return blocks.at(y * CHUNK_WIDTH + x);
-}
-
-
-
-std::array<Biomes, BIOME_WIDTH> get_biomes(ChkCrd Xpos)
-{
-	std::array<float, BIOME_WIDTH> biomeNoise{};
-	std::array<Biomes, BIOME_WIDTH> biomeTypes{};
-	
-	auto biomeGenerator = FastNoise::New<FastNoise::CellularValue>();
-	biomeGenerator->SetJitterModifier(0.7f);
-	biomeGenerator->GenUniformGrid2D(biomeNoise.data(), Xpos * CHUNK_WIDTH - BIOME_ITPL_R, 0, BIOME_WIDTH, 1, 0.01f, 123456);
-	
-	for (size_t i = 0; i < CHUNK_WIDTH + 2 * BIOME_ITPL_R; ++i)
-		biomeTypes[i] = Biomes(std::clamp(BmT(std::fabs(biomeNoise[i]) * BmT(Biomes::MAX)), 0, BmT(Biomes::MAX) - 1));
-	
-	return biomeTypes;
-}
-
-std::array<BlkCrd, BIOME_WIDTH> get_height_for_biome(ChkCrd Xpos, Biomes biome)
-{
-	switch (biome)
-	{
-	case Biomes::Polar:
-		break;
-	}
-	
-	auto perlinn = FastNoise::New<FastNoise::Perlin>();
-	auto heightGenerator = FastNoise::New<FastNoise::FractalFBm>();
-	
-	std::array<float, BIOME_WIDTH> heightNoise{};
-	heightGenerator->SetSource(FastNoise::New<FastNoise::Perlin>());
-	heightGenerator->SetOctaveCount(3);
-	heightGenerator->SetGain(0.5f);
-	heightGenerator->GenUniformGrid2D(heightNoise.data(), Xpos * CHUNK_WIDTH - BIOME_ITPL_R, 0, BIOME_WIDTH, 1, 0.01f, 123456);
-	
-	// generate terrain height
-	std::array<BlkCrd, BIOME_WIDTH> Ymax{};
-	for (BlkCrd i = 0; i < BIOME_WIDTH; ++i)
-	{
-		float height = heightNoise[i] * WATER_LEVEL * 0.7f + WATER_LEVEL * 1.2f;
-		Ymax[i] = std::clamp((BlkCrd)height, 0, CHUNK_HEIGHT - 1);
-	}
-	return Ymax;
-}
-
-
-std::map<Biomes, std::array<BlkCrd, BIOME_WIDTH>> get_height_for_biomes(ChkCrd Xpos, std::unordered_set<Biomes> biomes)
-{
-	std::map<Biomes, std::array<BlkCrd, BIOME_WIDTH>> heights;
-
-	for (const Biomes& biome : biomes)
-		heights[biome] = get_height_for_biome(Xpos, biome);
-
-	return heights;
-}
-
-
-
-
-std::string biome_to_name(Biomes biome)
-{
-	switch (biome)
-	{
-	case Biomes::Polar:
-		return "Polar";
-	case Biomes::Taiga:
-		return "Taiga";
-	case Biomes::Ocean:
-		return "Ocean";
-	case Biomes::Plains:
-		return "Plains";
-	case Biomes::Forest:
-		return "Forest";
-	case Biomes::Rainforest:
-		return "Rainforest";
-	case Biomes::Savanna:
-		return "Savanna";
-	case Biomes::Desert:
-		return "Desert";
-	default:
-		return "Nullbiome";
-	}
 }

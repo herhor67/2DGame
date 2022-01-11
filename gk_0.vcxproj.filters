@@ -33,7 +33,7 @@
     <ClCompile Include="functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TerrainGenerator.cpp">
+    <ClCompile Include="TerrainGen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Environment.cpp">
@@ -68,7 +68,7 @@
     <ClInclude Include="Environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TerrainGenerator.h">
+    <ClInclude Include="TerrainGen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Perlin.h">

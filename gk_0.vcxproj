@@ -21,7 +21,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="TerrainGenerator.cpp" />
+    <ClCompile Include="TerrainGen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block.h" />
@@ -34,7 +34,7 @@
     <ClInclude Include="Filesystem.h" />
     <ClInclude Include="functions.h" />
     <ClInclude Include="Perlin.h" />
-    <ClInclude Include="TerrainGenerator.h" />
+    <ClInclude Include="TerrainGen.h" />
     <ClInclude Include="typedefs.h" />
   </ItemGroup>
   <ItemGroup>
