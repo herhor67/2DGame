@@ -30,8 +30,6 @@ public:
 	bool save() const;
 	void draw() const;
 
-	void fill();
-
 	void testFill();
 	void flatFill();
 	

@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES 1
 
 #include <cmath>
+#include <mutex>
 #include <unordered_set>
 #include <utility>
 
@@ -24,6 +25,13 @@ class TerrainGen
 	std::unordered_set<Biomes> biomesUnq;
 	std::map<Biomes, std::array<float, CHUNK_WIDTH>> heightsArr;
 	std::array<BlkCrd, CHUNK_WIDTH> heightArr{};
+
+	static std::once_flag noiseInitFlag;
+	static FastNoise::SmartNode<FastNoise::CellularValue> biomeGenerator;
+	static FastNoise::SmartNode<FastNoise::FractalFBm> perlinGenerator;
+	static FastNoise::SmartNode<FastNoise::FractalFBm> simplexGenerator;
+	static FastNoise::SmartNode<> caveGenerator;
+
 
 	void get_biomes();
 	void get_height_for_biome(Biomes);
