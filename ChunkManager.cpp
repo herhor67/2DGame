@@ -147,7 +147,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 					const Pos blkPos = { blkX, blkY };
 
 //					std::cout << "Checking block: X: " << blkX << " Y: " << blkY << std::endl;
-//					std::cout << "Top layer: " << blkY + blk.boxTrel() << " bounded: (" << blkX + blk.boxLrel() << ", " << blkX + blk.boxRrel() << ") " << std::endl;
+//					std::cout << "Top layer: " << blkY + blk.boxrel_X() << " bounded: (" << blkX + blk.boxLrel() << ", " << blkX + blk.boxRrel() << ") " << std::endl;
 
 					for (const Pos& chkPt : checkPts)
 					{
@@ -182,8 +182,8 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 	//*
 	if (dY > 0) // moving up, collide top of Entity with bottoms of blocks
 	{
-		EntCrd begY = movement.first.Y + entity.boxTrel();
-		EntCrd endY = movement.second.Y + entity.boxTrel();
+		EntCrd begY = movement.first.Y + entity.boxrel_X();
+		EntCrd endY = movement.second.Y + entity.boxrel_X();
 
 		EntCrd begX = std::min(movement.first.X, movement.second.X) + entity.boxLrel();
 		EntCrd endX = std::max(movement.first.X, movement.second.X) + entity.boxRrel();
@@ -255,7 +255,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		EntCrd endX = movement.second.X + entity.boxLrel();
 
 		EntCrd begY = std::min(movement.first.Y, movement.second.Y) + entity.boxBrel();
-		EntCrd endY = std::max(movement.first.Y, movement.second.Y) + entity.boxTrel();
+		EntCrd endY = std::max(movement.first.Y, movement.second.Y) + entity.boxrel_X();
 
 //		std::cout << "MinX: " << begX << " MaxX: " << endX << std::endl;
 //		std::cout << "MinY: " << begY << " MaxY: " << endY << std::endl;
@@ -324,7 +324,7 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		EntCrd endX = movement.second.X + entity.boxRrel();
 
 		EntCrd begY = std::min(movement.first.Y, movement.second.Y) + entity.boxBrel();
-		EntCrd endY = std::max(movement.first.Y, movement.second.Y) + entity.boxTrel();
+		EntCrd endY = std::max(movement.first.Y, movement.second.Y) + entity.boxrel_X();
 
 //		std::cout << "MinX: " << begX << " MaxX: " << endX << std::endl;
 //		std::cout << "MinY: " << begY << " MaxY: " << endY << std::endl;

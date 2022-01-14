@@ -8,6 +8,7 @@
 
 #include "typedefs.h"
 #include "defines.h"
+#include "functions.h"
 
 #include "Chunk.h"
 
@@ -15,6 +16,29 @@
 enum class Biomes { MIN, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Rainforest, Savanna, Desert, MAX };
 typedef std::underlying_type_t<Biomes> BmT;
 
+
+template<size_t L = BIOME_ITPL_RNG>
+constexpr auto generate_gauss_interpolation()
+{
+	constexpr float sigmas = 2.5f;
+	constexpr float std = (BIOME_ITPL_RDS ? BIOME_ITPL_RDS : 1) / sigmas;
+
+	std::array<float, L> multipliers{ };
+
+	constexpr float DCoffset = gauss_pdf_dscrt<BIOME_ITPL_RDS, std>(-2); // -1?
+
+	size_t i = 0;
+	float sum = 0.0f;
+	for (size_t i = 0; i < L; ++i)
+	{
+		multipliers[i] = gauss_pdf_dscrt<BIOME_ITPL_RDS, std>(i) - DCoffset;
+		sum += multipliers[i];
+	}
+	for (size_t i = 0; i < L; ++i)
+		multipliers[i] /= sum;
+
+	return multipliers;
+}
 
 
 class TerrainGen
@@ -30,7 +54,8 @@ class TerrainGen
 	static FastNoise::SmartNode<FastNoise::CellularValue> biomeGenerator;
 	static FastNoise::SmartNode<FastNoise::FractalFBm> perlinGenerator;
 	static FastNoise::SmartNode<FastNoise::FractalFBm> simplexGenerator;
-	static FastNoise::SmartNode<> caveGenerator;
+
+	static constexpr std::array<float, BIOME_ITPL_RNG> itpl_coeffs = generate_gauss_interpolation();
 
 
 	void get_biomes();

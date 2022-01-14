@@ -8,6 +8,7 @@
    program is -not- in the public domain. */
 
 #if defined(WIN32)
+#define NOMINMAX 1
 #include <windows.h>
 #pragma warning (disable:4244)		/* disable bogus conversion warnings */
 #endif

@@ -39,7 +39,7 @@ public:
 template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
 constexpr auto generate_vertices()
 {
-	std::array<GLfloat, (H + 1)* (W + 1) * 3> points{ };
+	std::array<GLfloat, (H + 1) * (W + 1) * 3> points{};
 
 	size_t i = 0;
 	for (BlkCrd y = 0; y <= H; ++y)
@@ -57,12 +57,12 @@ template<size_t H = CHUNK_HEIGHT, size_t W = CHUNK_WIDTH>
 constexpr auto generate_faces()
 {
 	typedef GLushort DtTp;
-	std::array<DtTp, H* W * 4> points{ }; // GLubyte, GLushort, GLuint
+	std::array<DtTp, H * W * 4> points{}; // GLubyte, GLushort, GLuint
 
 	size_t i = 0;
-	for (DtTp y = 0; y < H; ++y)
+	for (BlkCrd y = 0; y < H; ++y)
 	{
-		for (DtTp x = 0; x < W; ++x)
+		for (BlkCrd x = 0; x < W; ++x)
 		{
 			points[i++] = y * (W + 1) + x;
 			points[i++] = y * (W + 1) + x + 1;

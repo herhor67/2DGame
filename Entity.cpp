@@ -8,62 +8,10 @@
 #include "Entity.h"
 
 
-Entity::Entity(float _mass, float _height, float _width, EntCrd _Xpos, EntCrd _Ypos, float _Xvel, float _Yvel, float _Xacc, float _Yacc) : mass(_mass), height(_height), width(_width), pos({ _Xpos, _Ypos }), vel({ _Xvel, _Yvel }), acc({ _Xacc, _Yacc })
-{
-}
+Entity::Entity(float _mass, float _height, float _width, EntCrd _Xpos, EntCrd _Ypos, float _Xvel, float _Yvel, float _Xacc, float _Yacc) : mass(_mass), height(_height), width(_width), pos({ _Xpos, _Ypos }), vel({ _Xvel, _Yvel }), acc({ _Xacc, _Yacc }) {}
 
-Entity::~Entity()
-{
-}
-/*
-void Entity::setPos(EntCrd _Xpos, EntCrd _Ypos)
-{
-	pos.X = _Xpos;
-	pos.Y = _Ypos;
-}
+Entity::~Entity() {}
 
-void Entity::setVel(float _Xvel, float _Yvel)
-{
-	Xvel = _Xvel;
-	Yvel = _Yvel;
-}
-
-void Entity::setAcc(float _Xacc, float _Yacc)
-{
-	Xacc = _Xacc;
-	Yacc = _Yacc;
-}*/
-/*
-void Entity::setPosX(EntCrd _Xpos)
-{
-
-}
-
-void Entity::setPosY(EntCrd _Ypos)
-{
-
-}
-
-void Entity::setVelX(EntCrd _Xvel)
-{
-
-}
-
-void Entity::setVelY(EntCrd _Yvel)
-{
-
-}
-
-void Entity::setAccX(EntCrd _Xacc)
-{
-
-}
-
-void Entity::setAccY(EntCrd _Yacc)
-{
-
-}
-//*/
 
 void Entity::draw() const
 {
@@ -80,8 +28,8 @@ void Entity::draw() const
 
 		glVertex2f(boxLrel(), boxBrel());
 		glVertex2f(boxRrel(), boxBrel());
-		glVertex2f(boxRrel(), boxTrel());
-		glVertex2f(boxLrel(), boxTrel());
+		glVertex2f(boxRrel(), boxrel_X());
+		glVertex2f(boxLrel(), boxrel_X());
 
 		glEnd();
 	}
@@ -94,8 +42,8 @@ void Entity::draw() const
 
 		glVertex2f(boxLrel(), boxBrel());
 		glVertex2f(boxRrel(), boxBrel());
-		glVertex2f(boxRrel(), boxTrel());
-		glVertex2f(boxLrel(), boxTrel());
+		glVertex2f(boxRrel(), boxrel_X());
+		glVertex2f(boxLrel(), boxrel_X());
 
 		glEnd();
 	}
@@ -163,7 +111,7 @@ Pos Entity::getNewPos(TDT Tdiff, int side, bool write)
 }
 
 
-EntCrd Entity::boxTrel() const
+EntCrd Entity::boxrel_X() const
 {
 	return height;
 }
@@ -182,7 +130,7 @@ EntCrd Entity::boxLrel() const
 
 EntCrd Entity::boxTabs() const
 {
-	return pos.Y + boxTrel();
+	return pos.Y + boxrel_X();
 }
 EntCrd Entity::boxBabs() const
 {
@@ -190,20 +138,20 @@ EntCrd Entity::boxBabs() const
 }
 EntCrd Entity::boxRabs() const
 {
-	return pos.X + +boxRrel();
+	return pos.X + boxRrel();
 }
 EntCrd Entity::boxLabs() const
 {
-	return pos.X + +boxLrel();
+	return pos.X + boxLrel();
 }
 
 Pos Entity::posTRrel() const
 {
-	return { boxRrel(), boxTrel() };
+	return { boxRrel(), boxrel_X() };
 }
 Pos Entity::posTLrel() const
 {
-	return { boxLrel(), boxTrel() };
+	return { boxLrel(), boxrel_X() };
 }
 Pos Entity::posBLrel() const
 {
@@ -216,21 +164,29 @@ Pos Entity::posBRrel() const
 
 Pos Entity::posTRabs() const
 {
-	return { boxRabs(), boxTabs() };
+	return pos + posTRrel();
 }
 Pos Entity::posTLabs() const
 {
-	return { boxLabs(), boxTabs() };
+	return pos + posTLrel();
 }
 Pos Entity::posBLabs() const
 {
-	return { boxLabs(), boxBabs() };
+	return pos + posBLrel();
 }
 Pos Entity::posBRabs() const
 {
-	return { boxRabs(), boxBabs() };
+	return pos + posBRrel();
 }
 
+Pos Entity::posCrel() const
+{
+	return { (boxRrel() + boxLrel())*0.5, (boxrel_X() + boxBrel()) * 0.5 };
+}
+Pos Entity::posCabs() const
+{
+	return pos + posCrel();
+}
 
 Player::Player() : Entity(75.0f, 2.0f, 1.0f)//Entity(75.0f, 1.8f, 0.5f)
 {

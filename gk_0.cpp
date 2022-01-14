@@ -1,3 +1,4 @@
+#
 #define NOMINMAX 1
 
 #include <iostream>
@@ -133,8 +134,8 @@ int main(int argc, char **argv)
 
 
 char title[] = "The Game";  // Windowed mode's title
-int windowedWidth = 1024*3/2;     // Windowed mode's width
-int windowedHeight = 576*3/2;     // Windowed mode's height
+int windowedWidth = 1440;     // Windowed mode's width
+int windowedHeight = 811;     // Windowed mode's height
 int windowedPosX = 1000;      // Windowed mode's top-left corner x
 int windowedPosY = 200;      // Windowed mode's top-left corner y
 int windowID;
@@ -143,7 +144,7 @@ int refreshMills = 1000 / 60 / 2; // refresh interval in milliseconds
 //int refreshMills = 100;
 
 enum ScreenModes { windowed = -1, borderless, fullscreen };
-int windowMode = windowed; // Full-screen or windowed mode?
+int windowMode = windowed;
 
 
 bool paused = false;
@@ -158,10 +159,17 @@ TDT Tdiff = 0;
 int currentWindowWidth;
 int currentWindowHeight;
 
+GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
+
+int zoomoutLvl = ZOOMOUT_LVLS;
+double ZOOMOUT = 400.0;
+
+
+
 ChunkManager chunkManager;
 Player player;
 
-GLfloat aspectRatio = 1.0f;
+
 
 
 struct Environments
@@ -296,22 +304,41 @@ void displayCllbck()
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	int minChunk, maxChunk;
-	// W/H > 1  =>  W > H
+	ChkCrd minChunk, maxChunk;
+	Pos camPos = player.pos;
+	double MAX_ZOOMOUT = MIN_ZOOMOUT;
+
+#if DYN_ZOOMOUT
+////	camPos.Y = std::min(camPos.Y, CHUNK_HEIGHT * 0.5);
+//	camPos.Y = std::min(player.pos.Y, (player.pos.Y + WATER_LEVEL) * 0.5);
+//	MAX_ZOOMOUT = std::max(MIN_ZOOMOUT, (player.pos.Y - WATER_LEVEL) / (CHUNK_HEIGHT - WATER_LEVEL) * ((CHUNK_HEIGHT- WATER_LEVEL) * 0.5 + 2 - MIN_ZOOMOUT) + MIN_ZOOMOUT);
+////	ZOOMOUT = std::min(ZOOMOUT, MAX_ZOOMOUT);
+
+	double Ymin = std::min(player.posCabs().Y, double(WATER_LEVEL)) - MIN_ZOOMOUT / DEFAULT_ASPECT;
+	double Ymax = player.posCabs().Y + MIN_ZOOMOUT / DEFAULT_ASPECT;
+
+	MAX_ZOOMOUT = (Ymax - Ymin) * 0.5;
+	camPos.Y = (Ymax + Ymin) * 0.5;
+
+	ZOOMOUT = MIN_ZOOMOUT * std::pow(MAX_ZOOMOUT / (MIN_ZOOMOUT / DEFAULT_ASPECT), double(zoomoutLvl) / ZOOMOUT_LVLS);
+#endif
+
+	// W/H <= r  =>  W <= r*H
 	if (aspectRatio <= DEFAULT_ASPECT) // set the height from -1 to 1, with larger width
 	{
-		glOrtho(-ZOOMOUT * aspectRatio + player.pos.X, ZOOMOUT * aspectRatio + player.pos.X, -ZOOMOUT + player.pos.Y, ZOOMOUT + player.pos.Y, 1.0f, -1.0f);
-		minChunk = floor((-ZOOMOUT * aspectRatio + player.pos.X) / CHUNK_WIDTH);
-		maxChunk = floor(( ZOOMOUT * aspectRatio + player.pos.X) / CHUNK_WIDTH);
+		glOrtho(-ZOOMOUT * aspectRatio, ZOOMOUT * aspectRatio, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
+		minChunk = floor((-ZOOMOUT * aspectRatio + camPos.X) / CHUNK_WIDTH);
+		maxChunk = floor(( ZOOMOUT * aspectRatio + camPos.X) / CHUNK_WIDTH);
 	}
 	else // set the width to -1 to 1, with larger height
 	{
-		glOrtho(-ZOOMOUT + player.pos.X, ZOOMOUT + player.pos.X, -ZOOMOUT / aspectRatio + player.pos.Y, ZOOMOUT / aspectRatio + player.pos.Y, 1.0f, -1.0f);
-		minChunk = floor((-ZOOMOUT + player.pos.X) / CHUNK_WIDTH);
-		maxChunk = floor(( ZOOMOUT + player.pos.X) / CHUNK_WIDTH);
+		glOrtho(-ZOOMOUT, ZOOMOUT, -ZOOMOUT / aspectRatio, ZOOMOUT / aspectRatio, 1.0f, -1.0f);
+		minChunk = floor((-ZOOMOUT + camPos.X) / CHUNK_WIDTH);
+		maxChunk = floor(( ZOOMOUT + camPos.X) / CHUNK_WIDTH);
 	}
+	glTranslatef(-camPos.X, -camPos.Y, 0.0f);
 
-#if REQUIRE_ENTIRE
+#if REQUIRE_ENTIRE_CHUNK
 	minChunk += 1;
 	maxChunk -= 1;
 #endif
@@ -320,7 +347,7 @@ void displayCllbck()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	// TERRAIN
-	for (int ch = minChunk; ch <= maxChunk; ++ch)
+	for (ChkCrd ch = minChunk; ch <= maxChunk; ++ch)
 		chunkManager.getChunk(ch).draw();
 
 //	chunkManager.getChunk(0).save();
@@ -330,12 +357,30 @@ void displayCllbck()
 	// DEBUG MENU
 	if (debugMenu)
 	{
-		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, { "FPS: " + to_string(fps), "Chunks: " + to_string(chunkManager.count()) }, 0, DEBUG_FONT_H);
-		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, { "Pos: " + to_string(player.pos.X) + ", " + to_string(player.pos.Y) }, 1, DEBUG_FONT_H);
-		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, { "Vel: " + to_string(player.vel.X) + ", " + to_string(player.vel.Y), "Acc: " + to_string(player.acc.X) + ", " + to_string(player.acc.Y) }, 2, DEBUG_FONT_H);
-		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, { "Tnow: " + to_string(Tnow), "Tdiff: " + to_string(Tdiff) }, 3, DEBUG_FONT_H);
-	}
+		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
+			"FPS: " + to_string(fps),
+			"Chunks: " + to_string(chunkManager.count()),
+		}, 0, DEBUG_FONT_H);
 
+		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
+			"Pos: " + to_string(player.pos.X) + ", " + to_string(player.pos.Y),
+			"Vel: " + to_string(player.vel.X) + ", " + to_string(player.vel.Y),
+			"Acc: " + to_string(player.acc.X) + ", " + to_string(player.acc.Y)
+		}, 1, DEBUG_FONT_H);
+
+		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
+			"Cam: " + to_string(camPos.X) + ", " + to_string(camPos.Y),
+			"Max Zoom: " + to_string(MAX_ZOOMOUT),
+			"Cur Zoom: " + to_string(ZOOMOUT),
+			"Zoom Lvl: " + to_string(zoomoutLvl)
+		}, 2, DEBUG_FONT_H);
+
+		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
+			"Tnow: " + to_string(Tnow),
+			"Tdiff: " + to_string(Tdiff)
+		}, 3, DEBUG_FONT_H);
+	}
+	
 	// DRAW
 #if DOUBLE_BUFFERED
 	glutSwapBuffers();
@@ -351,18 +396,16 @@ void reshapeCllbck(GLsizei width, GLsizei height)
 	cout << "reshapeCllbck called" << endl;
 #endif
 
+	if (height <= 0)
+		height = 1;
+	if (width <= 0)
+		height = 1;
+
 	currentWindowWidth = width;
 	currentWindowHeight = height;
 
-
-	// GLsizei for non-negative integer
-	// Compute aspectRatio ratio of the new window
-	if (height == 0)
-		height = 1;                // To prevent divide by 0
-
 	aspectRatio = (GLfloat)width / (GLfloat)height;
 
-	// Set the viewport to cover the new window
 	glViewport(0, 0, width, height);
 }
 
@@ -500,6 +543,15 @@ void regularKeyEvent(unsigned char key, int x, int y)
 		player.vel.X = 0.0f;
 		player.vel.Y = 0.0f;
 		break;
+
+	case '=':
+		if (zoomoutLvl < ZOOMOUT_LVLS)
+			++zoomoutLvl;
+		break;
+	case '-':
+		if (zoomoutLvl > 0)
+			--zoomoutLvl;
+		break;
 //*/
 	}
 }
@@ -520,7 +572,7 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-	player.pos = { 0.0f, 50.0f };
+	player.pos = { 0.0f, WATER_LEVEL };
 //	player.pos = { 0.0f, 10.0f };
 
 /*
@@ -553,7 +605,7 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(regularKeyEvent); // Register callback handler for regular-key event
 	glutMouseFunc(mouseEvent);   // Register callback handler for mouse event
 
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.678f, 0.847f, 0.902f, 1.0f); // 67.8% red, 84.7% green and 90.2
 	glClearDepth(Z_VAL_BACKGROUND);
@@ -561,14 +613,13 @@ int main(int argc, char** argv)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glShadeModel(GL_FLAT);
+
 #if DOUBLE_BUFFERED
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH); // Enable double buffered mode
 #else
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH); // Disable double buffered mode
 #endif
-
-	Tnow = glutGet(GLUT_ELAPSED_TIME);
-
 
 	vector<Pos> xd = interpolate(player.posBLrel(), player.posBRrel(), 3);
 	cout << "Pos interpolation test: " << endl;
@@ -612,7 +663,18 @@ int main(int argc, char** argv)
 			break;
 	}
 
+	std::cout << "Powers: ";
+	for (int i = 0; i <= 5; ++i)
+		std::cout << std::pow(2.0, double(i) / 5) << " ";
 
+	//ZOOMOUT = MIN_ZOOMOUT * std::pow(MAX_ZOOMOUT / (MIN_ZOOMOUT / DEFAULT_ASPECT), double(zoomoutLvl) / ZOOMOUT_LVLS);
+
+	std::cout << "XD: " << MIN_ZOOMOUT / DEFAULT_ASPECT << std::endl;
+
+	system("pause");
+
+
+	Tnow = glutGet(GLUT_ELAPSED_TIME);
 	glutMainLoop();               // Enter event-processing loop
 	
 	return 0;

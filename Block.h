@@ -13,7 +13,7 @@ public:
 	Block(uint = 0);
 	~Block();
 
-	EntCrd boxTrel() const;
+	EntCrd boxrel_X() const;
 	EntCrd boxBrel() const;
 	EntCrd boxRrel() const;
 	EntCrd boxLrel() const;

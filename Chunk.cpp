@@ -110,15 +110,13 @@ void setColor(uint block)
 	}
 }
 
+#if DEBUG_RENDER_ARRAYS
 
 void Chunk::draw() const
 {
-	glShadeModel(GL_FLAT);
-
-	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
-	glLoadIdentity();               // Reset the model-view matrix
-	glPushMatrix();                     // Save model-view matrix setting
-	glTranslatef(Xpos * CHUNK_WIDTH, 0.0f, Z_VAL_TERRAIN);    // Translate
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(Xpos * CHUNK_WIDTH, 0.0f, Z_VAL_TERRAIN);
 
 #if DRAW_FACES
 	{
@@ -127,7 +125,7 @@ void Chunk::draw() const
 #else
 		GLfloat colors[CHUNK_VERTNUM*4] = {};
 #endif
-		size_t i = 0;
+		size_t i = (CHUNK_WIDTH + 1) * 4;
 		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
 		{
 			for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
@@ -141,7 +139,7 @@ void Chunk::draw() const
 			}
 			i += 4;
 		}
-		setColor(0);
+//		setColor(0);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -174,10 +172,11 @@ void Chunk::draw() const
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 #endif
-	glPopMatrix();                      // Restore the model-view matrix
+//	glPopMatrix();                      // Restore the model-view matrix
 }
 
-/*
+#else
+
 void Chunk::draw() const
 {
 	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
@@ -191,8 +190,8 @@ void Chunk::draw() const
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glBegin(GL_QUADS);                  // Each set of 4 vertices form a quad
 
-		uint yBcrd = 0;
-		uint xBcrd = 0;
+		BlkCrd yBcrd = 0;
+		BlkCrd xBcrd = 0;
 		for (Block block : blocks)
 		{
 			if (block.ID != 0)
@@ -239,7 +238,8 @@ void Chunk::draw() const
 #endif
 	glPopMatrix();                      // Restore the model-view matrix
 }
-//*/
+
+#endif
 
 
 std::string Chunk::getPath() const

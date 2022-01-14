@@ -13,7 +13,7 @@ Block::~Block()
 {
 }
 
-EntCrd Block::boxTrel() const
+EntCrd Block::boxrel_X() const
 {
 	return 1.0;
 }
@@ -33,11 +33,11 @@ EntCrd Block::boxLrel() const
 
 Pos Block::posTRrel() const
 {
-	return { boxRrel(), boxTrel() };
+	return { boxRrel(), boxrel_X() };
 }
 Pos Block::posTLrel() const
 {
-	return { boxLrel(), boxTrel() };
+	return { boxLrel(), boxrel_X() };
 }
 Pos Block::posBLrel() const
 {

@@ -29,7 +29,7 @@ public:
 	Pos getNewPos(TDT, int, bool=false);
 	virtual void draw() const;
 	
-	EntCrd boxTrel() const;
+	EntCrd boxrel_X() const;
 	EntCrd boxBrel() const;
 	EntCrd boxRrel() const;
 	EntCrd boxLrel() const;
@@ -39,6 +39,7 @@ public:
 	EntCrd boxRabs() const;
 	EntCrd boxLabs() const;
 	
+
 	Pos posTRrel() const;
 	Pos posTLrel() const;
 	Pos posBLrel() const;
@@ -49,19 +50,8 @@ public:
 	Pos posBLabs() const;
 	Pos posBRabs() const;
 
-	/*
-	void setPos(Crd, Crd);
-	void setVel(float, float);
-	void setAcc(float, float);
-	*/
-	/*
-	void setPosX(Crd);
-	void setPosY(Crd);
-	void setVelX(Crd);
-	void setVelY(Crd);
-	void setAccX(Crd);
-	void setAccY(Crd);
-	//*/
+	Pos posCrel() const;
+	Pos posCabs() const;
 };
 
 
