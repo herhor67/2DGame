@@ -28,7 +28,7 @@ public:
 	Chunk();
 	~Chunk();
 	bool save() const;
-	void draw() const;
+	void draw(BlkCrd, BlkCrd) const;
 
 	void testFill();
 	void flatFill();

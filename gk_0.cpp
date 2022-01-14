@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
 char title[] = "The Game";  // Windowed mode's title
 int windowedWidth = 1440;     // Windowed mode's width
-int windowedHeight = 811;     // Windowed mode's height
+int windowedHeight = 810;     // Windowed mode's height
 int windowedPosX = 1000;      // Windowed mode's top-left corner x
 int windowedPosY = 200;      // Windowed mode's top-left corner y
 int windowID;
@@ -162,7 +162,7 @@ int currentWindowHeight;
 GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
 
 int zoomoutLvl = ZOOMOUT_LVLS;
-double ZOOMOUT = 400.0;
+float ZOOMOUT = 400.0f;
 
 
 
@@ -194,13 +194,13 @@ void LOOP(/*int value*/)
 
 	// Time management
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
-	Tdiff = (Tnow - Tprev) / 1000.0;
+	Tdiff = (Tnow - Tprev) / 1000.0f;
 	Tprev = Tnow;
 
 	static int Tprevfps = 0;
-	if (Tnow - Tprevfps > 1000.0)
+	if (Tnow - Tprevfps > 1000.0f)
 	{
-		fps = frameCount * 1000.0 / (Tnow - Tprevfps);
+		fps = frameCount * 1000.0f / (Tnow - Tprevfps);
 		Tprevfps = Tnow;
 		frameCount = 0;
 	}
@@ -293,34 +293,42 @@ void displayCllbck()
 
 	LOOP();
 
-	// I should make some players first perhaps
-	// now just let's load and draw chunks at camera
-
-
-
-
-
-	// Set the aspectRatio ratio of the clipping area to match the viewport
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
+	Pos plrCntr = player.posCabs();
 	ChkCrd minChunk, maxChunk;
-	Pos camPos = player.pos;
-	double MAX_ZOOMOUT = MIN_ZOOMOUT;
+	Pos camPos = plrCntr;
+	ZOOMOUT = MIN_ZOOMOUT;
 
 #if DYN_ZOOMOUT
-////	camPos.Y = std::min(camPos.Y, CHUNK_HEIGHT * 0.5);
-//	camPos.Y = std::min(player.pos.Y, (player.pos.Y + WATER_LEVEL) * 0.5);
-//	MAX_ZOOMOUT = std::max(MIN_ZOOMOUT, (player.pos.Y - WATER_LEVEL) / (CHUNK_HEIGHT - WATER_LEVEL) * ((CHUNK_HEIGHT- WATER_LEVEL) * 0.5 + 2 - MIN_ZOOMOUT) + MIN_ZOOMOUT);
-////	ZOOMOUT = std::min(ZOOMOUT, MAX_ZOOMOUT);
+	
 
-	double Ymin = std::min(player.posCabs().Y, double(WATER_LEVEL)) - MIN_ZOOMOUT / DEFAULT_ASPECT;
-	double Ymax = player.posCabs().Y + MIN_ZOOMOUT / DEFAULT_ASPECT;
+	float Ymin = std::min(plrCntr.Y, double(WATER_LEVEL)) - MIN_ZOOMOUT;
+	float Ymax = plrCntr.Y + MIN_ZOOMOUT;
 
-	MAX_ZOOMOUT = (Ymax - Ymin) * 0.5;
-	camPos.Y = (Ymax + Ymin) * 0.5;
+	float MAX_ZOOMOUT = (Ymax - Ymin) * 0.5f;
+	float maxCamY     = (Ymax + Ymin) * 0.5f;
 
-	ZOOMOUT = MIN_ZOOMOUT * std::pow(MAX_ZOOMOUT / (MIN_ZOOMOUT / DEFAULT_ASPECT), double(zoomoutLvl) / ZOOMOUT_LVLS);
+	float lvlrat = float(zoomoutLvl) / ZOOMOUT_LVLS;
+	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, lvlrat);
+
+	ZOOMOUT = MIN_ZOOMOUT * pwrrat;
+
+	/*/
+	if (aspectRatio <= DEFAULT_ASPECT)
+		ZOOMOUT = MIN_ZOOMOUT * pwrrat / aspectRatio;
+	else
+		ZOOMOUT = MIN_ZOOMOUT * pwrrat * aspectRatio;
+	//*/
+
+	if (zoomoutLvl == 0 || MAX_ZOOMOUT <= MIN_ZOOMOUT)
+		camPos.Y = plrCntr.Y;
+	else
+		if (aspectRatio <= DEFAULT_ASPECT)
+			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1);
+		else
+			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1) / aspectRatio;
 #endif
 
 	// W/H <= r  =>  W <= r*H
@@ -336,6 +344,7 @@ void displayCllbck()
 		minChunk = floor((-ZOOMOUT + camPos.X) / CHUNK_WIDTH);
 		maxChunk = floor(( ZOOMOUT + camPos.X) / CHUNK_WIDTH);
 	}
+//	glOrtho(-ZOOMOUT * aspectRatio, ZOOMOUT * aspectRatio, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
 	glTranslatef(-camPos.X, -camPos.Y, 0.0f);
 
 #if REQUIRE_ENTIRE_CHUNK
@@ -346,9 +355,16 @@ void displayCllbck()
 	// PREPARE 4 DRAWING
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// TERRAIN
+	BlkCrd YminI = std::floor(Ymin);
+	BlkCrd YmaxI = std::ceil(Ymax);
+
+#if REQUIRE_ENTIRE_BLOCK
+	YminI += 2;
+	YmaxI -= 2;
+#endif
+
 	for (ChkCrd ch = minChunk; ch <= maxChunk; ++ch)
-		chunkManager.getChunk(ch).draw();
+		chunkManager.getChunk(ch).draw(YminI, YmaxI);
 
 //	chunkManager.getChunk(0).save();
 
@@ -372,7 +388,9 @@ void displayCllbck()
 			"Cam: " + to_string(camPos.X) + ", " + to_string(camPos.Y),
 			"Max Zoom: " + to_string(MAX_ZOOMOUT),
 			"Cur Zoom: " + to_string(ZOOMOUT),
-			"Zoom Lvl: " + to_string(zoomoutLvl)
+			"Zoom Lvl: " + to_string(zoomoutLvl),
+			"Ymin: " + to_string(Ymin),
+			"Ymax: " + to_string(Ymax)
 		}, 2, DEBUG_FONT_H);
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
@@ -666,13 +684,15 @@ int main(int argc, char** argv)
 	std::cout << "Powers: ";
 	for (int i = 0; i <= 5; ++i)
 		std::cout << std::pow(2.0, double(i) / 5) << " ";
+	std::cout << std::endl;
 
 	//ZOOMOUT = MIN_ZOOMOUT * std::pow(MAX_ZOOMOUT / (MIN_ZOOMOUT / DEFAULT_ASPECT), double(zoomoutLvl) / ZOOMOUT_LVLS);
 
 	std::cout << "XD: " << MIN_ZOOMOUT / DEFAULT_ASPECT << std::endl;
 
-	system("pause");
+//	system("pause");
 
+//	return 0;
 
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
 	glutMainLoop();               // Enter event-processing loop

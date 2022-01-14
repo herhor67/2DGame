@@ -8,6 +8,6 @@ typedef double EntCrd; // Entity Coordinate Type
 typedef int    BlkCrd; // Block Coordinate Type
 typedef int    ChkCrd; // Chunk Coordinate Type
 
-typedef float TDT; // Time Difference Type
+typedef double TDT; // Time Difference Type
 
 typedef unsigned char ClrT;

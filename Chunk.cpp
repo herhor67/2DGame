@@ -112,11 +112,17 @@ void setColor(uint block)
 
 #if DEBUG_RENDER_ARRAYS
 
-void Chunk::draw() const
+void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(Xpos * CHUNK_WIDTH, 0.0f, Z_VAL_TERRAIN);
+
+	Ymax = std::clamp(Ymax, 0, CHUNK_HEIGHT);
+	Ymin = std::clamp(Ymin, 0, CHUNK_HEIGHT);
+
+	size_t blockCount  = (Ymax - Ymin) * CHUNK_WIDTH * 4;
+	size_t blockOffset = Ymin * CHUNK_WIDTH * 4;
 
 #if DRAW_FACES
 	{
@@ -152,7 +158,7 @@ void Chunk::draw() const
 		glColorPointer(4, GL_FLOAT, 0, &colors);
 #endif
 
-		glDrawElements(GL_QUADS, CHUNK_BLOCKNUM*4, GL_UNSIGNED_SHORT, facesPtr); // GL_UNSIGNED_SHORT, GL_UNSIGNED_INT
+		glDrawElements(GL_QUADS, blockCount, GL_UNSIGNED_SHORT, facesPtr + blockOffset);
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
@@ -167,7 +173,7 @@ void Chunk::draw() const
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, pointsPtr);
 
-		glDrawElements(GL_QUADS, CHUNK_BLOCKNUM*4, GL_UNSIGNED_SHORT, facesPtr);
+		glDrawElements(GL_QUADS, blockCount, GL_UNSIGNED_SHORT, facesPtr + blockOffset);
 
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
