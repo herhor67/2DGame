@@ -21,117 +21,6 @@
 using namespace std;
 
 
-/*
-// Drawing (display) routine.
-void drawScene(void)
-{
-	// Clear screen to background color.
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	//ToDo -- drawing
-
-	// Flush created objects to the screen, i.e., force rendering.
-	glFlush();
-}
-
-// Initialization routine.
-void setup(void)
-{
-	// Set background (or clearing) color.
-	glClearColor(1.0, 1.0, 1.0, 0.0);
-}
-
-// OpenGL window reshape routine.
-void resize(int w, int h)
-{
-	// Set viewport size to be entire OpenGL window.
-	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-
-	// Set matrix mode to projection.
-	glMatrixMode(GL_PROJECTION);
-
-	// Clear current projection matrix to identity.
-	glLoadIdentity();
-
-	// Specify the orthographic (or perpendicular) projection,
-	// i.e., define the viewing box.
-	glOrtho(-10.0, 10.0, -10.0, 10.0,-10.0, 10.0);
-	//glFrustum(-10.0, 10.0, -10.0, 10.0, 5.0, 100.0);
-
-	// Set matrix mode to modelview.
-	glMatrixMode(GL_MODELVIEW);
-
-	// Clear current modelview matrix to identity.
-	glLoadIdentity();
-}
-
-void animate(int value) {
-
-
-	// Note that glutTimerFunc() calls animate() *once* after the
-	// specified msecs. Therefore, to make repeated calls, animate()
-	// must call itself again with glutTimerFunc() as below.
-	glutTimerFunc(100, animate, 1);
-	glutPostRedisplay();
-}
-
-// Keyboard input processing routine.
-void keyInput(unsigned char key, int x, int y)
-{
-	//ToDo
-
-}
-
-// Mouse callback routine.
-void mouseControl(int button, int state, int x, int y)
-{
-
-  //ToDo
-}
-
-// Main routine: defines window properties, creates window,
-// registers callback routines and begins processing.
-int main(int argc, char **argv)
-{
-	// Initialize GLUT.
-	glutInit(&argc, argv);
-
-	// Set display mode as single-buffered and RGB color.
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-
-	// Set OpenGL window size.
-	glutInitWindowSize(500, 500);
-
-	// Set position of OpenGL window upper-left corner.
-	glutInitWindowPosition(100, 100);
-
-	// Create OpenGL window with title.
-	glutCreateWindow("Laboratorium GK: 00_OGL");
-
-	// Initialize.
-	setup();
-
-	// Register display routine.
-	glutDisplayFunc(drawScene);
-
-	// Register reshape routine.
-	glutReshapeFunc(resize);
-
-
-	// Register the mouse and keyboard callback function.
-	glutMouseFunc(mouseControl);
-	glutKeyboardFunc(keyInput);
-
-	//Animation
-	glutTimerFunc(5, animate, 1);
-
-	// Begin processing.
-	glutMainLoop();
-
-	return 0;
-}
-*/
-
 
 char title[] = "The Game";  // Windowed mode's title
 int windowedWidth = 1440;     // Windowed mode's width
@@ -181,10 +70,8 @@ struct Environments
 	static constexpr Environment standing = { {0, 0}, {0, ENV_GRAVITY}, {300.0f, 1.0f} };
 };
 
-//Environments envs;
 
 
-/* Called back when timer expired */
 void LOOP(/*int value*/)
 {
 	// Debug
@@ -200,6 +87,26 @@ void LOOP(/*int value*/)
 	static int Tprevfps = 0;
 	if (Tnow - Tprevfps > 1000.0f)
 	{
+		/*/
+		if (windowedWidth <= 1440)
+			windowedWidth = 2500;
+		else
+			windowedWidth = 1000;
+		//*/
+		//*/
+		if (windowedWidth <= 1440)
+			windowedWidth = 1441;
+		else
+			windowedWidth = 1439;
+		//*/
+		/*/
+		if (windowedWidth <= 810)
+			windowedWidth = 811;
+		else
+			windowedWidth = 809;
+		//*/
+		glutReshapeWindow(windowedWidth, windowedHeight);
+
 		fps = frameCount * 1000.0f / (Tnow - Tprevfps);
 		Tprevfps = Tnow;
 		frameCount = 0;
@@ -299,52 +206,69 @@ void displayCllbck()
 	Pos plrCntr = player.posCabs();
 	ChkCrd minChunk, maxChunk;
 	Pos camPos = plrCntr;
-	ZOOMOUT = MIN_ZOOMOUT;
+	ZOOMOUT = MIN_ZOOMOUT*3;
+
+	BlkCrd YminI = 0;
+	BlkCrd YmaxI = CHUNK_HEIGHT;
 
 #if DYN_ZOOMOUT
-	
-
 	float Ymin = std::min(plrCntr.Y, double(WATER_LEVEL)) - MIN_ZOOMOUT;
 	float Ymax = plrCntr.Y + MIN_ZOOMOUT;
 
 	float MAX_ZOOMOUT = (Ymax - Ymin) * 0.5f;
 	float maxCamY     = (Ymax + Ymin) * 0.5f;
 
-	float lvlrat = float(zoomoutLvl) / ZOOMOUT_LVLS;
-	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, lvlrat);
+	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, float(zoomoutLvl) / ZOOMOUT_LVLS);
 
 	ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 
-	/*/
+	//*/
 	if (aspectRatio <= DEFAULT_ASPECT)
-		ZOOMOUT = MIN_ZOOMOUT * pwrrat / aspectRatio;
+		ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 	else
-		ZOOMOUT = MIN_ZOOMOUT * pwrrat * aspectRatio;
+		ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 	//*/
 
 	if (zoomoutLvl == 0 || MAX_ZOOMOUT <= MIN_ZOOMOUT)
 		camPos.Y = plrCntr.Y;
+	else if (zoomoutLvl == ZOOMOUT_LVLS)
+		camPos.Y = maxCamY;
 	else
 		if (aspectRatio <= DEFAULT_ASPECT)
 			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1);
 		else
-			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1) / aspectRatio;
+			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1);
 #endif
+
+	float ratiosRatio = 1;
+
+//	ratiosRatio = 
 
 	// W/H <= r  =>  W <= r*H
 	if (aspectRatio <= DEFAULT_ASPECT) // set the height from -1 to 1, with larger width
 	{
-		glOrtho(-ZOOMOUT * aspectRatio, ZOOMOUT * aspectRatio, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
-		minChunk = floor((-ZOOMOUT * aspectRatio + camPos.X) / CHUNK_WIDTH);
-		maxChunk = floor(( ZOOMOUT * aspectRatio + camPos.X) / CHUNK_WIDTH);
+//		glOrtho(-ZOOMOUT * aspectRatio / DEFAULT_ASPECT, ZOOMOUT * aspectRatio / DEFAULT_ASPECT, -ZOOMOUT / DEFAULT_ASPECT, ZOOMOUT / DEFAULT_ASPECT, 1.0f, -1.0f);
+
+		minChunk = floor((camPos.X - ZOOMOUT * aspectRatio) / CHUNK_WIDTH);
+		maxChunk = floor((camPos.X + ZOOMOUT * aspectRatio) / CHUNK_WIDTH);
+
+		YminI = std::floor(camPos.Y - ZOOMOUT);
+		YmaxI = std:: ceil(camPos.Y + ZOOMOUT);
 	}
 	else // set the width to -1 to 1, with larger height
 	{
-		glOrtho(-ZOOMOUT, ZOOMOUT, -ZOOMOUT / aspectRatio, ZOOMOUT / aspectRatio, 1.0f, -1.0f);
-		minChunk = floor((-ZOOMOUT + camPos.X) / CHUNK_WIDTH);
-		maxChunk = floor(( ZOOMOUT + camPos.X) / CHUNK_WIDTH);
+//		glOrtho(-ZOOMOUT * DEFAULT_ASPECT, ZOOMOUT * DEFAULT_ASPECT, -ZOOMOUT / aspectRatio * DEFAULT_ASPECT, ZOOMOUT / aspectRatio * DEFAULT_ASPECT, 1.0f, -1.0f);
+
+		minChunk = floor((camPos.X - ZOOMOUT) / CHUNK_WIDTH);
+		maxChunk = floor((camPos.X + ZOOMOUT) / CHUNK_WIDTH);
+
+		YminI = std::floor(camPos.Y - ZOOMOUT / aspectRatio);
+		YmaxI = std:: ceil(camPos.Y + ZOOMOUT / aspectRatio);
 	}
 //	glOrtho(-ZOOMOUT * aspectRatio, ZOOMOUT * aspectRatio, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
+
+	glOrtho(-ZOOMOUT * DEFAULT_ASPECT, ZOOMOUT * DEFAULT_ASPECT, -ZOOMOUT / aspectRatio * DEFAULT_ASPECT, ZOOMOUT / aspectRatio * DEFAULT_ASPECT, 1.0f, -1.0f);
+
 	glTranslatef(-camPos.X, -camPos.Y, 0.0f);
 
 #if REQUIRE_ENTIRE_CHUNK
@@ -354,13 +278,10 @@ void displayCllbck()
 
 	// PREPARE 4 DRAWING
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	BlkCrd YminI = std::floor(Ymin);
-	BlkCrd YmaxI = std::ceil(Ymax);
 
 #if REQUIRE_ENTIRE_BLOCK
-	YminI += 2;
-	YmaxI -= 2;
+	YminI += 1;
+	YmaxI -= 1;
 #endif
 
 	for (ChkCrd ch = minChunk; ch <= maxChunk; ++ch)
@@ -386,11 +307,11 @@ void displayCllbck()
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
 			"Cam: " + to_string(camPos.X) + ", " + to_string(camPos.Y),
-			"Max Zoom: " + to_string(MAX_ZOOMOUT),
+//			"Max Zoom: " + to_string(MAX_ZOOMOUT),
 			"Cur Zoom: " + to_string(ZOOMOUT),
 			"Zoom Lvl: " + to_string(zoomoutLvl),
-			"Ymin: " + to_string(Ymin),
-			"Ymax: " + to_string(Ymax)
+			"Ymin: " + to_string(YminI),
+			"Ymax: " + to_string(YmaxI)
 		}, 2, DEBUG_FONT_H);
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {

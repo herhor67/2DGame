@@ -96,10 +96,10 @@ void drawStringOnWindow(float x, float y, float z, void* font, const std::vector
 			++lineNum;
 		}
 
+//		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
-//		glMatrixMode(GL_MODELVIEW);
 	}
 }
