@@ -87,26 +87,6 @@ void LOOP(/*int value*/)
 	static int Tprevfps = 0;
 	if (Tnow - Tprevfps > 1000.0f)
 	{
-		/*/
-		if (windowedWidth <= 1440)
-			windowedWidth = 2500;
-		else
-			windowedWidth = 1000;
-		//*/
-		//*/
-		if (windowedWidth <= 1440)
-			windowedWidth = 1441;
-		else
-			windowedWidth = 1439;
-		//*/
-		/*/
-		if (windowedWidth <= 810)
-			windowedWidth = 811;
-		else
-			windowedWidth = 809;
-		//*/
-		glutReshapeWindow(windowedWidth, windowedHeight);
-
 		fps = frameCount * 1000.0f / (Tnow - Tprevfps);
 		Tprevfps = Tnow;
 		frameCount = 0;
@@ -204,14 +184,16 @@ void displayCllbck()
 	glLoadIdentity();
 
 	Pos plrCntr = player.posCabs();
-	ChkCrd minChunk, maxChunk;
 	Pos camPos = plrCntr;
+
 	ZOOMOUT = MIN_ZOOMOUT*3;
 
 	BlkCrd YminI = 0;
 	BlkCrd YmaxI = CHUNK_HEIGHT;
+	ChkCrd minChunk = 0;
+	ChkCrd maxChunk = 0;
 
-#if DYN_ZOOMOUT
+#if! DYN_ZOOMOUT
 	float Ymin = std::min(plrCntr.Y, double(WATER_LEVEL)) - MIN_ZOOMOUT;
 	float Ymax = plrCntr.Y + MIN_ZOOMOUT;
 
@@ -222,72 +204,58 @@ void displayCllbck()
 
 	ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 
-	//*/
-	if (aspectRatio <= DEFAULT_ASPECT)
-		ZOOMOUT = MIN_ZOOMOUT * pwrrat;
-	else
-		ZOOMOUT = MIN_ZOOMOUT * pwrrat;
-	//*/
-
 	if (zoomoutLvl == 0 || MAX_ZOOMOUT <= MIN_ZOOMOUT)
 		camPos.Y = plrCntr.Y;
-	else if (zoomoutLvl == ZOOMOUT_LVLS)
-		camPos.Y = maxCamY;
 	else
 		if (aspectRatio <= DEFAULT_ASPECT)
-			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1);
+			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1.0f) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1.0f);
 		else
-			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1);
+			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1.0f) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1.0f) * DEFAULT_ASPECT / aspectRatio;
+#else
+	float MAX_ZOOMOUT = CHUNK_HEIGHT * 0.5f;
+	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, float(zoomoutLvl) / ZOOMOUT_LVLS);
+	ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 #endif
 
-	float ratiosRatio = 1;
-
-//	ratiosRatio = 
+	float scaleX = 1;
+	float scaleY = 1;
 
 	// W/H <= r  =>  W <= r*H
-	if (aspectRatio <= DEFAULT_ASPECT) // set the height from -1 to 1, with larger width
+	if (aspectRatio <= DEFAULT_ASPECT)
 	{
-//		glOrtho(-ZOOMOUT * aspectRatio / DEFAULT_ASPECT, ZOOMOUT * aspectRatio / DEFAULT_ASPECT, -ZOOMOUT / DEFAULT_ASPECT, ZOOMOUT / DEFAULT_ASPECT, 1.0f, -1.0f);
-
-		minChunk = floor((camPos.X - ZOOMOUT * aspectRatio) / CHUNK_WIDTH);
-		maxChunk = floor((camPos.X + ZOOMOUT * aspectRatio) / CHUNK_WIDTH);
-
-		YminI = std::floor(camPos.Y - ZOOMOUT);
-		YmaxI = std:: ceil(camPos.Y + ZOOMOUT);
+		scaleX = 1.0f / aspectRatio;
+		scaleY = 1.0f;
 	}
-	else // set the width to -1 to 1, with larger height
+	else
 	{
-//		glOrtho(-ZOOMOUT * DEFAULT_ASPECT, ZOOMOUT * DEFAULT_ASPECT, -ZOOMOUT / aspectRatio * DEFAULT_ASPECT, ZOOMOUT / aspectRatio * DEFAULT_ASPECT, 1.0f, -1.0f);
-
-		minChunk = floor((camPos.X - ZOOMOUT) / CHUNK_WIDTH);
-		maxChunk = floor((camPos.X + ZOOMOUT) / CHUNK_WIDTH);
-
-		YminI = std::floor(camPos.Y - ZOOMOUT / aspectRatio);
-		YmaxI = std:: ceil(camPos.Y + ZOOMOUT / aspectRatio);
+		scaleX = 1.0f / DEFAULT_ASPECT;
+		scaleY = 1.0f / DEFAULT_ASPECT * aspectRatio;
 	}
-//	glOrtho(-ZOOMOUT * aspectRatio, ZOOMOUT * aspectRatio, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
 
-	glOrtho(-ZOOMOUT * DEFAULT_ASPECT, ZOOMOUT * DEFAULT_ASPECT, -ZOOMOUT / aspectRatio * DEFAULT_ASPECT, ZOOMOUT / aspectRatio * DEFAULT_ASPECT, 1.0f, -1.0f);
-
+	glOrtho(-ZOOMOUT, ZOOMOUT, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
+	glScalef(scaleX, scaleY, 1.0f);
 	glTranslatef(-camPos.X, -camPos.Y, 0.0f);
+
+	minChunk = floor((camPos.X - ZOOMOUT / scaleX) / CHUNK_WIDTH);
+	maxChunk = floor((camPos.X + ZOOMOUT / scaleX) / CHUNK_WIDTH);
+
+	YminI = std::floor(camPos.Y - ZOOMOUT / scaleY);
+	YmaxI = std:: ceil(camPos.Y + ZOOMOUT / scaleY);
 
 #if REQUIRE_ENTIRE_CHUNK
 	minChunk += 1;
 	maxChunk -= 1;
 #endif
-
-	// PREPARE 4 DRAWING
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 #if REQUIRE_ENTIRE_BLOCK
 	YminI += 1;
 	YmaxI -= 1;
 #endif
 
+	// PREPARE 4 DRAWING
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	for (ChkCrd ch = minChunk; ch <= maxChunk; ++ch)
 		chunkManager.getChunk(ch).draw(YminI, YmaxI);
-
-//	chunkManager.getChunk(0).save();
 
 	player.draw();
 
@@ -307,7 +275,7 @@ void displayCllbck()
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
 			"Cam: " + to_string(camPos.X) + ", " + to_string(camPos.Y),
-//			"Max Zoom: " + to_string(MAX_ZOOMOUT),
+			"Max Zoom: " + to_string(MAX_ZOOMOUT),
 			"Cur Zoom: " + to_string(ZOOMOUT),
 			"Zoom Lvl: " + to_string(zoomoutLvl),
 			"Ymin: " + to_string(YminI),
@@ -511,8 +479,8 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-	player.pos = { 0.0f, WATER_LEVEL };
-//	player.pos = { 0.0f, 10.0f };
+//	player.pos = { 0.0f, WATER_LEVEL };
+	player.pos = { 0.0f, 127.0f };
 
 /*
 	{

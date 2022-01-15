@@ -64,10 +64,10 @@ constexpr auto generate_faces()
 	{
 		for (BlkCrd x = 0; x < W; ++x)
 		{
-			points[i++] = y * (W + 1) + x;
-			points[i++] = y * (W + 1) + x + 1;
-			points[i++] = (y + 1) * (W + 1) + x + 1;
-			points[i++] = (y + 1) * (W + 1) + x;
+			points[i++] = DtTp(y * (W + 1) + x);
+			points[i++] = DtTp(y * (W + 1) + x + 1);
+			points[i++] = DtTp((y + 1) * (W + 1) + x + 1);
+			points[i++] = DtTp((y + 1) * (W + 1) + x);
 		}
 	}
 	return points;
