@@ -103,3 +103,13 @@ void drawStringOnWindow(float x, float y, float z, void* font, const std::vector
 		glPopMatrix();
 	}
 }
+
+float remap(float istart, float istop, float ostart, float ostop, float value)
+{
+	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
+BlkCrd remap(BlkCrd istart, BlkCrd istop, BlkCrd ostart, BlkCrd ostop, BlkCrd value)
+{
+	return ostart + (ostop - ostart) * (value - istart) / (istop - istart);
+}

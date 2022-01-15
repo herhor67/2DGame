@@ -8,11 +8,15 @@
 
 #include "Perlin.h"
 
+#if DEBUG_RENDER_ARRAYS
 static constexpr auto pointsArr = generate_vertices<>();
 static constexpr auto pointsPtr = pointsArr.data();
 static constexpr auto facesArr = generate_faces<>();
 static constexpr auto facesPtr = facesArr.data();
+#endif
+#if CLR_NO_FLOAT
 static constexpr auto colorsArr = generate_colors<ClrT>();
+#endif
 
 
 Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
@@ -61,7 +65,7 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 		
 		TerrainGen generator(Xpos, blocks);
 
-		generator.fill_chunk();
+		generator.generate_chunk();
 
 	}
 }
@@ -137,9 +141,9 @@ void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 			for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 			{
 #if CLR_NO_FLOAT
-				memcpy(&colors[i], &colorsArr[blocks[y * CHUNK_WIDTH + x].ID * 4], 4 * sizeof(ClrT));
+				memcpy(&colors[i], &colorsArr[Bl_t(blocks[y * CHUNK_WIDTH + x].ID) * 4], 4 * sizeof(ClrT));
 #else
-				memcpy(&colors[i], &blockColorsFloat[blocks[y * CHUNK_WIDTH + x].ID * 4], 4 * sizeof(GLfloat));
+				memcpy(&colors[i], &blockColorsFloat[Bl_t(blocks[y * CHUNK_WIDTH + x].ID) * 4], 4 * sizeof(GLfloat));
 #endif
 				i += 4;
 			}
@@ -267,7 +271,7 @@ bool Chunk::save() const
 
 		for (Block block : blocks)
 		{
-			uint blockID = block.ID;
+			uint blockID = uint(Bl_t(block.ID));
 //		std::cout << "Write: " << blockID << "\t";
 			// VarInt write
 			byte buffer[5] = { 0 };
@@ -324,23 +328,23 @@ void Chunk::flatFill()
 {
 	for (int lev = 0; lev <= 0; ++lev)
 		for (int x = 0; x < CHUNK_WIDTH; ++x)
-			blocks[lev * CHUNK_WIDTH + x] = Block(6);
+			blocks[lev * CHUNK_WIDTH + x] = BlockN::bedrock;
 
 	for (int lev = 1; lev <= 3; ++lev)
 		for (int x = 0; x < CHUNK_WIDTH; ++x)
-			blocks[lev * CHUNK_WIDTH + x] = Block(1);
+			blocks[lev * CHUNK_WIDTH + x] = BlockN::stone;
 
 	for (int lev = 4; lev <= 5; ++lev)
 		for (int x = 0; x < CHUNK_WIDTH; ++x)
-			blocks[lev * CHUNK_WIDTH + x] = Block(2);
+			blocks[lev * CHUNK_WIDTH + x] = BlockN::dirt;
 
 	for (int lev = 6; lev <= 6; ++lev)
 		for (int x = 0; x < CHUNK_WIDTH; ++x)
-			blocks[lev * CHUNK_WIDTH + x] = Block(3);
+			blocks[lev * CHUNK_WIDTH + x] = BlockN::grass;
 
 	for (int lev = 7; lev < CHUNK_HEIGHT; ++lev)
 		for (int x = 0; x < CHUNK_WIDTH; ++x)
-			blocks[lev * CHUNK_WIDTH + x] = Block(0);
+			blocks[lev * CHUNK_WIDTH + x] = BlockN::air;
 
 }
 
@@ -351,7 +355,7 @@ Block Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
 	if (x < 0 || x >= CHUNK_WIDTH || y < 0 || y >= CHUNK_HEIGHT)
 	{
 //		std::cout << "shit";
-		return Block(0);
+		return BlockN::air;
 	}
 //	std::cout << "gudd";
 	return blocks[y * CHUNK_WIDTH + x];

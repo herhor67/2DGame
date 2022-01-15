@@ -6,14 +6,19 @@
 #include "Environment.h"
 
 
+enum class BlockN { MIN = -1, air, stone, dirt, grass, bedrock, water, lava, sand, sandstone, snow, ice, cactoo, pumpkin, sprucewood, spruceleaves, MAX };
+typedef std::underlying_type_t<BlockN> Bl_t;
+
 class Block
 {
 public:
-	uint ID;
-	Block(uint = 0);
+	BlockN ID;
+
+	Block(BlockN = BlockN::air);
+	Block(Bl_t);
 	~Block();
 
-	EntCrd boxrel_X() const;
+	EntCrd boxTrel() const;
 	EntCrd boxBrel() const;
 	EntCrd boxRrel() const;
 	EntCrd boxLrel() const;

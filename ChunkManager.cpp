@@ -403,12 +403,12 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 	else if (maxDistSq_X > maxDistSq_Y)
 	{
 		ratio = maxDistSq ? sqrt(maxDistSq_Y / maxDistSq) : ratio;
-		return std::make_tuple(finalPos_Y, Block(0), finalBlock_Y, finalSide_Y, ratio);
+		return std::make_tuple(finalPos_Y, BlockN::air, finalBlock_Y, finalSide_Y, ratio);
 	}
 	else if (maxDistSq_X < maxDistSq_Y)
 	{
 		ratio = maxDistSq ? sqrt(maxDistSq_X / maxDistSq) : ratio;
-		return std::make_tuple(finalPos_X, finalBlock_X, Block(0), finalSide_X, ratio);
+		return std::make_tuple(finalPos_X, finalBlock_X, BlockN::air, finalSide_X, ratio);
 	}
 	else
 	{

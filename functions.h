@@ -43,6 +43,10 @@ template <typename T> std::vector<T> interpolate(T v1, T v2, size_t count)
 	return temp;
 }
 
+float remap(float, float, float, float, float);
+
+BlkCrd remap(BlkCrd, BlkCrd, BlkCrd, BlkCrd, BlkCrd);
+
 //template <typename T, size_t N>
 //std::unordered_set<T> get_unique(std::array<T, N> vec)
 //{
@@ -61,14 +65,14 @@ template <typename T> std::vector<T> interpolate(T v1, T v2, size_t count)
 //	return m;
 //}
 
-template<double u, float o>
+template<float u, float o>
 constexpr float gauss_cdf(float x)
 {
 	return 0.5f * (1.0f + gcem::erf((x - u) / (o * GCEM_SQRT_2)));
 }
 
-template<float u, float o>
+template<int u, float o>
 constexpr float gauss_pdf_dscrt(int x)
 {
-	return gauss_cdf<u,o>(x + 0.5f) - gauss_cdf<u, o>(x - 0.5f);
+	return gauss_cdf<float(u), o>(x + 0.5f) - gauss_cdf<float(u), o>(x - 0.5f);
 }

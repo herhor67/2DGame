@@ -5,15 +5,13 @@
 
 
 
-Block::Block(uint _ID) : ID(_ID)
-{
-}
+Block::Block(BlockN _ID) : ID(_ID) {}
 
-Block::~Block()
-{
-}
+Block::Block(Bl_t _ID) : ID(BlockN(_ID)) {}
 
-EntCrd Block::boxrel_X() const
+Block::~Block() {}
+
+EntCrd Block::boxTrel() const
 {
 	return 1.0;
 }
@@ -33,11 +31,11 @@ EntCrd Block::boxLrel() const
 
 Pos Block::posTRrel() const
 {
-	return { boxRrel(), boxrel_X() };
+	return { boxRrel(), boxTrel() };
 }
 Pos Block::posTLrel() const
 {
-	return { boxLrel(), boxrel_X() };
+	return { boxLrel(), boxTrel() };
 }
 Pos Block::posBLrel() const
 {

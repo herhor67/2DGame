@@ -50,15 +50,12 @@ int currentWindowHeight;
 
 GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
 
-int zoomoutLvl = ZOOMOUT_LVLS;
+int zoomoutLvl = ZOOMOUT_LVLS / 2;
 float ZOOMOUT = 400.0f;
-
 
 
 ChunkManager chunkManager;
 Player player;
-
-
 
 
 struct Environments
@@ -193,7 +190,7 @@ void displayCllbck()
 	ChkCrd minChunk = 0;
 	ChkCrd maxChunk = 0;
 
-#if! DYN_ZOOMOUT
+#if DYN_ZOOMOUT
 	float Ymin = std::min(plrCntr.Y, double(WATER_LEVEL)) - MIN_ZOOMOUT;
 	float Ymax = plrCntr.Y + MIN_ZOOMOUT;
 
@@ -479,21 +476,9 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-//	player.pos = { 0.0f, WATER_LEVEL };
-	player.pos = { 0.0f, 127.0f };
+	player.pos = { 0.0f, WATER_LEVEL };
+//	player.pos = { 0.0f, 127.0f };
 
-/*
-	{
-		Chunk ch(0);
-		ch.flatFill();
-		ch.save();
-	}
-	{
-		Chunk ch(-1);
-		ch.flatFill();
-		ch.save();
-	}
-	//*/
 
 	glutInit(&argc, argv);            // Initialize GLUT
 
@@ -528,63 +513,61 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH); // Disable double buffered mode
 #endif
 
-	vector<Pos> xd = interpolate(player.posBLrel(), player.posBRrel(), 3);
-	cout << "Pos interpolation test: " << endl;
-	for (Pos& x : xd)
-		x.cout();
-
-	cout << "Pos*k test: " << endl;
-	Pos dd = player.pos;
-	dd *= 2.5f;
-	dd.cout();
-
-	cout << "Collisions test: " << endl;
-	vector<BlkCrd> test = possibleBlocksCollisions(player.pos.Y, player.pos.Y + 1);
-	for (BlkCrd& t : test)
-		cout << t << '\t';
-	cout << endl;
-
-	cout << "Perlin test: " << endl;
-	const siv::PerlinNoise perlin;
-	for (size_t i = 0; i <= 10; ++i)
-		cout << perlin.octave1D(float(i)/100, 1) << endl;
-	const siv::PerlinNoise perlin2;
-	for (size_t i = 0; i <= 10; ++i)
-		cout << perlin2.octave1D(float(i) / 100, 1) << endl;
-
-	// generator test
-	cout << "Noise generator test: " << endl;
-	std::vector<float> noiseOutput(3*3*2);
-	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
- 	fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 4, 2, 0.2f, 1337);
-	int index = 0;
-
-//	for (int z = 0; z < 3; z++)
-//		for (int y = 0; y < 3; y++)
-//			for (int x = 0; x < 1; x++)
-//				cout << x << '\t' << y << '\t' << z << '\t' << noiseOutput[index++] << endl;
-	for (const float xd : noiseOutput)
+	// Unit Tests
 	{
-		cout << xd << endl;
-		if (xd == 0)
-			break;
+		vector<Pos> xd = interpolate(player.posBLrel(), player.posBRrel(), 3);
+		cout << "Pos interpolation test: " << endl;
+		for (Pos& x : xd)
+			x.cout();
+
+		cout << "Pos*k test: " << endl;
+		Pos dd = player.pos;
+		dd *= 2.5f;
+		dd.cout();
+
+		cout << "Collisions test: " << endl;
+		vector<BlkCrd> test = possibleBlocksCollisions(player.pos.Y, player.pos.Y + 1);
+		for (BlkCrd& t : test)
+			cout << t << '\t';
+		cout << endl;
+
+		cout << "Perlin test: " << endl;
+		const siv::PerlinNoise perlin;
+		for (size_t i = 0; i <= 10; ++i)
+			cout << perlin.octave1D(float(i) / 100, 1) << endl;
+		const siv::PerlinNoise perlin2;
+		for (size_t i = 0; i <= 10; ++i)
+			cout << perlin2.octave1D(float(i) / 100, 1) << endl;
+
+		cout << "Noise generator test:" << endl;
+		std::vector<float> noiseOutput(3 * 3 * 2);
+		FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
+		fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 4, 2, 0.2f, 1337);
+		int index = 0;
+
+		for (const float xd : noiseOutput)
+		{
+			cout << xd << endl;
+			if (xd == 0)
+				break;
+		}
+
+		std::cout << "Powers test:" << std::endl;
+		for (int i = 0; i <= 5; ++i)
+			std::cout << std::pow(2.0, double(i) / 5) << " ";
+		std::cout << std::endl;
+
+		std::cout << "Name to block test:" << std::endl;;
+		Block xd2 = BlockN::bedrock;
+		std::cout << Bl_t(xd2.ID) << endl;
 	}
-
-	std::cout << "Powers: ";
-	for (int i = 0; i <= 5; ++i)
-		std::cout << std::pow(2.0, double(i) / 5) << " ";
-	std::cout << std::endl;
-
-	//ZOOMOUT = MIN_ZOOMOUT * std::pow(MAX_ZOOMOUT / (MIN_ZOOMOUT / DEFAULT_ASPECT), double(zoomoutLvl) / ZOOMOUT_LVLS);
-
-	std::cout << "XD: " << MIN_ZOOMOUT / DEFAULT_ASPECT << std::endl;
+	
 
 //	system("pause");
-
 //	return 0;
 
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
-	glutMainLoop();               // Enter event-processing loop
+	glutMainLoop(); // Enter event-processing loop
 	
 	return 0;
 }
