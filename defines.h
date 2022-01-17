@@ -18,14 +18,14 @@ static constexpr int CHUNK_TTL_MS = 10 * 1000;
 static constexpr BlkCrd WATER_LEVEL = 64;
 static constexpr BlkCrd  LAVA_LEVEL = 10;
 
-static constexpr BlkCrd PLANT_OUTGEN_RDS = 8;
+static constexpr BlkCrd STRUCTURE_OUT_RDS = 16;
 static constexpr BlkCrd BIOME_ITPL_RDS = 16;
 
-static constexpr BlkCrd PLANT_WIDTH    = CHUNK_WIDTH + 2 * PLANT_OUTGEN_RDS;
-static constexpr BlkCrd TERRAIN_OFFSET = PLANT_OUTGEN_RDS;
-static constexpr BlkCrd TERRAIN_WIDTH  = CHUNK_WIDTH + 2 * TERRAIN_OFFSET;
-static constexpr BlkCrd BIOME_OFFSET   = BIOME_ITPL_RDS + PLANT_OUTGEN_RDS;
-static constexpr BlkCrd BIOME_WIDTH    = CHUNK_WIDTH + 2 * BIOME_OFFSET;
+static constexpr BlkCrd STRUCTURE_WIDTH = CHUNK_WIDTH + 2 * STRUCTURE_OUT_RDS;
+static constexpr BlkCrd TERRAIN_OFFSET  = STRUCTURE_OUT_RDS;
+static constexpr BlkCrd TERRAIN_WIDTH   = CHUNK_WIDTH + 2 * TERRAIN_OFFSET;
+static constexpr BlkCrd BIOME_OFFSET    = BIOME_ITPL_RDS + STRUCTURE_OUT_RDS;
+static constexpr BlkCrd BIOME_WIDTH     = CHUNK_WIDTH + 2 * BIOME_OFFSET;
 
 static constexpr BlkCrd PLANT_NOISE = 8;
 
@@ -88,7 +88,7 @@ static constexpr float ENV_GRAVITY = -9.81f;
 #define CONSOLE_LOG_CALLBACKS 0
 #define CONSOLE_LOG_EVENTS 0
 #define CONSOLE_LOG_CHUNKS 0
-#define CONSOLE_LOG_GENERATION 1
+#define CONSOLE_LOG_GENERATION 0
 #define CONSOLE_LOG_MOVEMENT 0
 
 #define DEBUG_COLOR_BIOMES 0

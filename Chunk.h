@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <limits>
 #include <map>
 #include <string>
@@ -13,6 +14,7 @@
 
 #include "typedefs.h"
 #include "defines.h"
+#include "functions.h"
 
 #include "Block.h"
 #include "BlockColors.h"
@@ -44,11 +46,13 @@ constexpr auto generate_vertices()
 	size_t i = 0;
 	for (BlkCrd y = 0; y <= H; ++y)
 	{
-		for (BlkCrd x = 0; x <= W; ++x)
+		for (BlkCrd x = 0; x < W; ++x)
 		{
 			points[i++] = x;
 			points[i++] = y;
 		}
+		points[i++] = nextafter(float(W));
+		points[i++] = y;
 	}
 	return points;
 }

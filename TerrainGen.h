@@ -15,11 +15,11 @@
 #include "Chunk.h"
 
 
-enum class BiomeN { MIN=-3, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Rainforest, Savanna, Desert, MAX };
+enum class BiomeN { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
 typedef std::underlying_type_t<BiomeN> Bm_t;
 
-enum class PlantN { MIN = -1, Cactoo, Pumpkin, Oak, Spruce, Accacia, JungleTree, MAX };
-typedef std::underlying_type_t<PlantN> Pl_t;
+enum class StrctrN { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Accacia, Redwood, Igloo, Coral, MAX };
+typedef std::underlying_type_t<StrctrN> St_t;
 
 template<size_t L = BIOME_ITPL_RDS>
 constexpr auto generate_gauss_interpolation()
@@ -38,7 +38,7 @@ constexpr auto generate_gauss_interpolation()
 		sum += 2 * multipliers[i];
 	}
 	multipliers[L] = gauss_pdf_dscrt<L, std>(L) - DCoffset;
-	sum += multipliers[i];
+	sum += multipliers[L];
 
 	for (size_t i = 0; i <= L; ++i)
 		multipliers[i] /= sum;
@@ -78,12 +78,12 @@ class TerrainGen
 	inline void fill_with_stone() const;
 	inline void fill_with_fluids() const;
 	inline void surface_layers() const;
-	inline void add_vegetation() const;
+	inline void add_structures() const;
 	inline void protect_bedrock() const;
 
 	inline void debug_color_biomes() const;
 
-	inline void place_plant(PlantN, BlkCrd) const;
+	inline void generate_structure(StrctrN, BlkCrd) const;
 
 	
 	inline constexpr Block& blockAtSet(BlkCrd, BlkCrd) const;

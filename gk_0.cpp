@@ -448,11 +448,13 @@ void regularKeyEvent(unsigned char key, int x, int y)
 		player.vel.Y = 0.0f;
 		break;
 
-	case '=':
+	case '-':
+	case '_':
 		if (zoomoutLvl < ZOOMOUT_LVLS)
 			++zoomoutLvl;
 		break;
-	case '-':
+	case '=':
+	case '+':
 		if (zoomoutLvl > 0)
 			--zoomoutLvl;
 		break;

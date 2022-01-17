@@ -6,7 +6,7 @@
 #include "Environment.h"
 
 
-enum class BlockN { MIN = -1, air, stone, dirt, grass, bedrock, water, lava, sand, sandstone, snow, ice, cactoo, pumpkin, sprucewood, spruceleaves, MAX };
+enum class BlockN { MIN = -1, air, stone, dirt, grass, bedrock, water, lava, sand, sandstone, snow, ice, cactoo, pumpkin, sprucewood, spruceleaves, oakwood, oakleaves, accaciawood, accacialeaves, redwood, redleaves, redcoral, greencoral, yellowcoral, bluecoral, drygrass, MAX };
 typedef std::underlying_type_t<BlockN> Bl_t;
 
 class Block

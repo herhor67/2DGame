@@ -6,6 +6,8 @@ https://stackoverflow.com/questions/47285082/modern-c-initialize-constexpr-table
 
 https://github.com/kthohr/gcem
 
+https://stackoverflow.com/a/55779158/7321403
+
 
 co to proceduralne
 

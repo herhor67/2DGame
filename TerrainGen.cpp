@@ -49,23 +49,18 @@ void TerrainGen::get_biomes()
 	
 	for (BlkCrd i = 0; i < BIOME_WIDTH; ++i)
 	{
-//		float value = std::fabs(biomeNoise[i]);
+		//float value = std::fabs(biomeNoise[i]);
 		float value = biomeNoise[i] * 0.5f + 0.5f;
 
-		constexpr Bm_t biomeRange = Bm_t(BiomeN::MAX) - 1 - Bm_t(BiomeN::MIN);
-
-		Bm_t choosen = value * biomeRange + Bm_t(BiomeN::MIN) + 1;
-//		std::cout << choosen << ' ';
-		choosen = std::clamp(choosen, Bm_t(BiomeN::MIN) + 1, Bm_t(BiomeN::MAX) - 1);
-
-//		BiomeN biome = BiomeN(std::clamp(Bm_t(std::fabs(biomeNoise[i]) * Bm_t(BiomeN::MAX) - 1) + 1, 1, Bm_t(BiomeN::MAX) - 1));
+		Bm_t choosen = remap01_dsc(Bm_t(BiomeN::MIN) + 1, Bm_t(BiomeN::MAX) - 1, value);
 		BiomeN biome = BiomeN(choosen);
 
-		biome = BiomeN::Taiga;
+//		biome = BiomeN::Desert;
 
 		biomeArr[i] = biome;
 		biomesUnq.insert(biome);
 	}
+
 #if CONSOLE_LOG_GENERATION
 	std::cout << "Biomes found: ";
 	for (const auto& bm : biomesUnq)
@@ -163,7 +158,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 		break;
 
 
-	case BiomeN::Rainforest:
+	case BiomeN::Redwoodforest:
 		perlinGenerator->SetOctaveCount(4);
 		perlinGenerator->SetGain(0.7f);
 		perlinGenerator->SetLacunarity(1.8f);
@@ -437,7 +432,7 @@ void TerrainGen::surface_layers() const
 			break;
 
 
-		case BiomeN::Rainforest:
+		case BiomeN::Redwoodforest:
 			if (Yt >= WATER_LEVEL)
 			{
 				blockAtSet(Yt, x) = BlockN::grass;
@@ -455,7 +450,7 @@ void TerrainGen::surface_layers() const
 		case BiomeN::Savanna:
 			if (Yt >= WATER_LEVEL)
 			{
-				blockAtSet(Yt, x) = BlockN::dirt;
+				blockAtSet(Yt, x) = BlockN::drygrass;
 				blockAtSet(--Yt, x) = BlockN::dirt;
 			}
 			if (Yt >= WATER_LEVEL - 2)
@@ -473,7 +468,7 @@ void TerrainGen::surface_layers() const
 				blockAtSet(Yt, x) = BlockN::sand;
 				blockAtSet(--Yt, x) = BlockN::sand;
 			}
-			if (Yt >= WATER_LEVEL - 2)
+			if (Yt >= WATER_LEVEL)
 			{
 				blockAtSet(--Yt, x) = BlockN::sand;
 			}
@@ -487,51 +482,135 @@ void TerrainGen::surface_layers() const
 }
 
 // generate vegetation
-void TerrainGen::add_vegetation() const
+void TerrainGen::add_structures() const
 {
-	std::array<float, TERRAIN_WIDTH> plantChanceNoise{};
-	plantGenerator->GenUniformGrid2D(plantChanceNoise.data(), Xpos * CHUNK_WIDTH - PLANT_OUTGEN_RDS, 0, TERRAIN_WIDTH, 1, 1.0f, 123456);
+	std::array<float, STRUCTURE_WIDTH> plantChanceNoise{};
+	plantGenerator->GenUniformGrid2D(plantChanceNoise.data(), Xpos * CHUNK_WIDTH - STRUCTURE_OUT_RDS, 0, STRUCTURE_WIDTH, 1, 1.0f, 123456);
 
-	//std::cout << "Plants: \t";
-	//for (auto pl : plantPlaceNoise)
-	//	std::cout << pl << ' ';
-	//std::cout << std::endl;
-
-	for (BlkCrd x = -PLANT_OUTGEN_RDS; x < CHUNK_WIDTH + PLANT_OUTGEN_RDS; ++x)
+	for (BlkCrd x = -STRUCTURE_OUT_RDS; x < CHUNK_WIDTH + STRUCTURE_OUT_RDS; ++x)
 	{
-		BlkCrd i = x + PLANT_OUTGEN_RDS;
+		BlkCrd i = x + STRUCTURE_OUT_RDS;
 		switch (biomeAtGet(x))
 		{
-		case BiomeN::Desert:
-			if (plantChanceNoise[i] > 0.97f)
-				place_plant(PlantN::Cactoo, x);
-			break;
-		case BiomeN::Plains:
-			if (plantChanceNoise[i] > 0.98f)
-				place_plant(PlantN::Pumpkin, x);
+		case BiomeN::Polar:
+			if (plantChanceNoise[i] > 0.999f)
+				generate_structure(StrctrN::Igloo, x);
 			break;
 		case BiomeN::Taiga:
 			if (plantChanceNoise[i] > 0.9f)
-				place_plant(PlantN::Spruce, x);
+				generate_structure(StrctrN::Spruce, x);
+			break;
+		case BiomeN::Mountains:
+			if (plantChanceNoise[i] > 0.995f)
+				generate_structure(StrctrN::Spruce, x);
+			break;
+		case BiomeN::Ocean:
+			if (plantChanceNoise[i] > 0.96f)
+				generate_structure(StrctrN::Coral, x);
+			break;
+		case BiomeN::Hills:
+			if (plantChanceNoise[i] > 0.99f)
+				generate_structure(StrctrN::Oak, x);
+			break;
+		case BiomeN::Plains:
+			if (plantChanceNoise[i] > 0.97f)
+				generate_structure(StrctrN::Pumpkin, x);
+			break;
+		case BiomeN::Forest:
+			if (plantChanceNoise[i] > 0.9f)
+				generate_structure(StrctrN::Oak, x);
+			break;
+		case BiomeN::Redwoodforest:
+			if (plantChanceNoise[i] > 0.95f)
+				generate_structure(StrctrN::Redwood, x);
+			break;
+		case BiomeN::Savanna:
+			if (plantChanceNoise[i] > 0.99f)
+				generate_structure(StrctrN::Accacia, x);
+			break;
+		case BiomeN::Desert:
+			if (plantChanceNoise[i] > 0.97f)
+				generate_structure(StrctrN::Cactoo, x);
 			break;
 		}
 	}
+#if CONSOLE_LOG_GENERATION
 	std::cout << std::endl;
+#endif
 }
 
 // generate plants
-inline void TerrainGen::place_plant(PlantN plant, BlkCrd x) const
+inline void TerrainGen::generate_structure(StrctrN structure, BlkCrd x) const
 {
 	BlkCrd Xttl = Xpos * CHUNK_WIDTH + x;
+#if CONSOLE_LOG_GENERATION
 	std::cout << Xttl << ' ';
+#endif
 	BlkCrd Ymax = heightAtGet(x);
 
-	switch (plant)
+	switch (structure)
 	{
-	case PlantN::Cactoo:
+	case StrctrN::Igloo:
+		if (true) // just for variable space, always true
+		{
+			float rnd = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+
+			int side = int(rnd * 4) % 4;
+			
+			std::array<BlkCrd, 5> heights;
+			for (BlkCrd i = 0; i <= 4; ++i)
+				heights[i] = std::max(heightAtGet(x + i - 2), WATER_LEVEL) + 2;
+
+			Ymax = median(heights);
+
+			for (BlkCrd i = 2; i >= heights[0] - Ymax; --i)
+				if (blockAtGet(Ymax + i, x - 2).ID == BlockN::air)
+					blockAtSet(Ymax + i, x - 2) = (i > 0) ? BlockN::ice : BlockN::snow;
+
+			for (BlkCrd i = 3; i >= heights[1] - Ymax; --i)
+				if (blockAtGet(Ymax + i, x - 1).ID == BlockN::air)
+					blockAtSet(Ymax + i, x - 1) = (i > 0) ? BlockN::ice : BlockN::snow;
+
+			for (BlkCrd i = 3; i >= heights[2] - Ymax; --i)
+				if (blockAtGet(Ymax + i, x).ID == BlockN::air)
+					blockAtSet(Ymax + i, x + 0) = (i > 0) ? BlockN::ice : BlockN::snow;
+
+			for (BlkCrd i = 3; i >= heights[3] - Ymax; --i)
+				if (blockAtGet(Ymax + i, x + 1).ID == BlockN::air)
+					blockAtSet(Ymax + i, x + 1) = (i > 0) ? BlockN::ice : BlockN::snow;
+
+			for (BlkCrd i = 2; i >= heights[4] - Ymax; --i)
+				if (blockAtGet(Ymax + i, x + 2).ID == BlockN::air)
+					blockAtSet(Ymax + i, x + 2) = (i > 0) ? BlockN::ice : BlockN::snow;
+			
+			if (side == 0)
+			{
+				blockAtSet(Ymax + 1, x) = BlockN::air;
+				blockAtSet(Ymax + 2, x) = BlockN::air;
+			}
+			if (side == 1)
+			{
+				if (blockAtGet(Ymax + 1, x + 3).ID == BlockN::air)
+					blockAtSet(Ymax + 1, x + 3) = BlockN::ice;
+				if (blockAtGet(Ymax + 2, x + 3).ID == BlockN::air)
+					blockAtSet(Ymax + 2, x + 3) = BlockN::ice;
+			}
+			if (side == 2)
+			{
+				if (blockAtGet(Ymax + 1, x - 3).ID == BlockN::air)
+					blockAtSet(Ymax + 1, x - 3) = BlockN::ice;
+				if (blockAtGet(Ymax + 2, x - 3).ID == BlockN::air)
+					blockAtSet(Ymax + 2, x - 3) = BlockN::ice;
+			}
+		}
+		break;
+
+
+	case StrctrN::Cactoo:
 		if (Ymax >= WATER_LEVEL)
 		{
 			float rnd = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+
 			int height = rnd * 3 + 1;
 			for (int i = 1; i <= height; ++i)
 				blockAtSet(Ymax + i, x) = BlockN::cactoo;
@@ -539,18 +618,22 @@ inline void TerrainGen::place_plant(PlantN plant, BlkCrd x) const
 		break;
 
 
-	case PlantN::Pumpkin:
+	case StrctrN::Pumpkin:
 		if (Ymax >= WATER_LEVEL)
 			blockAtSet(Ymax + 1, x) = BlockN::pumpkin;
 		break;
 
 
-	case PlantN::Spruce:
+	case StrctrN::Spruce:
 		if (Ymax >= WATER_LEVEL)
 		{
 			float rnd = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+
 			int height = rnd * 10 + 5;
-			int radius = rnd * 5 + 2;
+			int radius = rnd * 4 + 1;
+
+			for (int i = 1; i <= height - 2; ++i)
+				blockAtSet(Ymax + i, x) = BlockN::sprucewood;
 
 			for (int i = 1; i <= height + 1; ++i)
 				if (i > height/5)
@@ -561,36 +644,137 @@ inline void TerrainGen::place_plant(PlantN plant, BlkCrd x) const
 						if (blockAtGet(Ymax + i, x - j).ID == BlockN::air)
 							blockAtSet(Ymax + i, x - j) = BlockN::spruceleaves;
 					}
-			
-			for (int i = 1; i <= height - 2; ++i)
-				blockAtSet(Ymax + i, x) = BlockN::sprucewood;
-
 		}
 		break;
 
 
-	case PlantN::Accacia:
+	case StrctrN::Oak:
+		if (Ymax >= WATER_LEVEL)
+		{
+			float rnd1 = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = plantGenerator->GenSingle2D(Xttl, 2, 123456);
+			float rnd3 = plantGenerator->GenSingle2D(Xttl, 3, 123456);
+
+			int height = rnd1 * 10 + 5;
+			int branches = rnd1 * 5;
+			int side = (rnd2 > 0.5f) ? 1 : -1;
+			bool orient = rnd3 > 0.5f;
+
+			for (int i = 1; i <= height; ++i)
+				blockAtSet(Ymax + i, x) = BlockN::oakwood;
+
+			int num = 0;
+			int den = 1;
+			for (int j = 1; j <= branches; ++j)
+			{
+				num = 2 * num + den;
+				den *= 3;
+				side *= -1;
+				for (int i = 1; i <= height / (j + 1); ++i)
+				{
+					BlkCrd y = Ymax + height * num / den + 1 + remap(0, height / (j + 1), 0, std::max(1, height / (j + 4)), i);
+//					if (blockAtGet(y, x + side * i).ID == BlockN::air)
+						blockAtSet(y, x + side * i) = BlockN::oakwood;
+				}
+			}
+
+			for (int i = -height / 2; i <= height / 2; ++i)
+				for (int j = -height * 3 / 5; j <= height * 3 / 5; ++j)
+					if (orient && j * j / 4 + i * i * 4 / 9 <= height * height / 9 || !orient && i * i / 4 + j * j * 4 / 9 <= height * height / 9)
+						if (blockAtGet(Ymax + i + height * 2 / 3 + 1, x + j).ID == BlockN::air)
+							blockAtSet(Ymax + i + height * 2 / 3 + 1, x + j) = BlockN::oakleaves;
+		}
+		break;
+
+
+	case StrctrN::Accacia:
+		if (Ymax >= WATER_LEVEL)
+		{
+			float rnd1 = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = plantGenerator->GenSingle2D(Xttl, 2, 123456);
+
+			int height = rnd1 * 7 + 5;
+			int offset = (rnd2 * 2 - 1) * 4 * (rnd1 + 1);
+
+			for (int i = 1; i <= height; ++i)
+				blockAtSet(Ymax + i, x + remap(1, height, 0, offset, i)) = BlockN::accaciawood;
+
+			for (int i = height * 5 / 6; i <= height * 6 / 5; ++i)
+				for (int j = 0; j <= std::min(remap(height * 5 / 6, height, 2, height / 2, i), remap(height, height * 6 / 5, height / 2, 2, i)); ++j)
+				{
+					if (blockAtGet(Ymax + i, x + offset + j).ID == BlockN::air)
+						blockAtSet(Ymax + i, x + offset + j) = BlockN::accacialeaves;
+					if (blockAtGet(Ymax + i, x + offset - j).ID == BlockN::air)
+						blockAtSet(Ymax + i, x + offset - j) = BlockN::accacialeaves;
+				}
+		}
+		break;
+
+
+	case StrctrN::Redwood:
 		if (Ymax >= WATER_LEVEL)
 		{
 			float rnd = plantGenerator->GenSingle2D(Xttl, 1, 123456);
-			int height = rnd * 5 + 4;
-			int radius = rnd * 3;
 
-			for (int i = 0; i < height - 1; ++i)
-			{
-				blockAtSet(Ymax + i + 1, x) = BlockN::sprucewood;
+			int height = rnd * 15 + 20;
+			int lvsw = rnd * 3 + 2;
+			int trnkw = rnd * 3 + 1;
 
-				if (i >= 2)
-					for (int j = 0; j < radius * i; ++j)
-					{
-						blockAtSet(Ymax + i + 1, x + j + 1) = BlockN::spruceleaves;
-						blockAtSet(Ymax + i + 1, x - j - 1) = BlockN::spruceleaves;
-					}
-			}
+			if (trnkw >= 1)
+				for (int j = 0; j <= height - 1; ++j)
+					blockAtSet(Ymax + j, x) = BlockN::redwood;
+			if (trnkw >= 2)
+				for (int j = 0; j <= height * 4 / 5; ++j)
+					blockAtSet(Ymax + j, x - 1) = BlockN::redwood;
+			if (trnkw >= 3)
+				for (int j = 0; j <= height / 2; ++j)
+					blockAtSet(Ymax + j, x + 1) = BlockN::redwood;
+
+			for (int i = height * 2 / 6 - 2; i <= height + 2; ++i)
+				for (int j = 0; j <= std::min(std::min(remap(height *2/6 - 3, height * 2 / 6 +2, 0, lvsw, i), remap(height + 3, height*3/5, 0, lvsw, i)), lvsw); ++j)
+				{
+					if (blockAtGet(Ymax + i, x + j).ID == BlockN::air)
+						blockAtSet(Ymax + i, x + j) = BlockN::redleaves;
+					if (blockAtGet(Ymax + i, x - j).ID == BlockN::air)
+						blockAtSet(Ymax + i, x - j) = BlockN::redleaves;
+				}
 		}
 		break;
 
 
+	case StrctrN::Coral:
+		if (Ymax <= WATER_LEVEL - 5)
+		{
+			float rnd1 = plantGenerator->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = plantGenerator->GenSingle2D(Xttl, 2, 123456);
+			float rnd3 = plantGenerator->GenSingle2D(Xttl, 3, 123456);
+			float rnd4 = plantGenerator->GenSingle2D(Xttl, 4, 123456);
+
+			int height = rnd1 * 10 + 3;
+			int branches = (rnd1 * 0.5f + 0.5f) * 7 * (rnd2 * 0.6f + 0.4f);
+			int side = (rnd3 > 0.5f) ? 1 : -1;
+			BlockN color = (BlockN)remap01_dsc(Bl_t(BlockN::redcoral), Bl_t(BlockN::bluecoral), rnd4);
+
+			for (int i = 1; i <= height; ++i)
+				if (blockAtGet(Ymax + i, x).ID == BlockN::water)
+					blockAtSet(Ymax + i, x) = color;
+
+			int num = 0;
+			int den = 1;
+			for (int j = 1; j <= branches; ++j)
+			{
+				num = 3 * num + den;
+				den *= 4;
+				side = -side;
+				for (int i = 1; i <= height / (j + 1); ++i)
+				{
+					BlkCrd y = Ymax + height * num / den + 1 + remap(0, height / (j + 1), 0, std::max(1, height / (j + 4)), i);
+					if (blockAtGet(y, x + side * i).ID == BlockN::water)
+						blockAtSet(y, x + side * i) = color;
+				}
+			}
+		}
+		break;
 	}
 }
 
@@ -655,7 +839,7 @@ void TerrainGen::generate_chunk()
 	fill_with_stone();
 	fill_with_fluids();
 	surface_layers();
-	add_vegetation();
+	add_structures();
 	protect_bedrock();
 
 
@@ -682,7 +866,7 @@ constexpr std::string TerrainGen::biome_to_name(BiomeN biome)
 		return "Plains";
 	case BiomeN::Forest:
 		return "Forest";
-	case BiomeN::Rainforest:
+	case BiomeN::Redwoodforest:
 		return "Rainforest";
 	case BiomeN::Savanna:
 		return "Savanna";
