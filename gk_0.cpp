@@ -478,8 +478,8 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-	player.pos = { 0.0f, WATER_LEVEL };
-//	player.pos = { 0.0f, 127.0f };
+//	player.pos = { 0.0f, WATER_LEVEL };
+	player.pos = { 0.0f, 127.0f };
 
 
 	glutInit(&argc, argv);            // Initialize GLUT
