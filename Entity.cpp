@@ -181,7 +181,7 @@ Pos Entity::posBRabs() const
 
 Pos Entity::posCrel() const
 {
-	return { (boxRrel() + boxLrel())*0.5, (boxrel_X() + boxBrel()) * 0.5 };
+	return { (boxRrel() + boxLrel()) * (EntCrd)0.5, (boxrel_X() + boxBrel()) * (EntCrd)0.5 };
 }
 Pos Entity::posCabs() const
 {

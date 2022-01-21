@@ -55,7 +55,7 @@ void TerrainGen::get_biomes()
 		Bm_t choosen = remap01_dsc(Bm_t(BiomeN::MIN) + 1, Bm_t(BiomeN::MAX) - 1, value);
 		BiomeN biome = BiomeN(choosen);
 
-//		biome = BiomeN::Desert;
+//		biome = BiomeN::Polar;
 
 		biomeArr[i] = biome;
 		biomesUnq.insert(biome);
@@ -785,7 +785,7 @@ void TerrainGen::protect_bedrock() const
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 		for (BlkCrd y = 0; y <= 3; ++y)
 			if (y == 3 && x % 2 || y == 2 && x / 2 % 2 || y == 1 && (x + 3) / 4 % 2 || y == 0)
-				dataRef[y * CHUNK_WIDTH + x] = BlockN::bedrock;
+				blockAtSet(y, x) = BlockN::bedrock;
 }
 
 // replace all non-air block with single type, according to the biome at coordinate
@@ -793,39 +793,39 @@ void TerrainGen::debug_color_biomes() const
 {
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
-			if (dataRef[y * CHUNK_WIDTH + x].ID == BlockN::water || dataRef[y * CHUNK_WIDTH + x].ID == BlockN::lava)
-				dataRef[y * CHUNK_WIDTH + x] = Block(16);
-			else if (dataRef[y * CHUNK_WIDTH + x].ID != BlockN::air)
-				dataRef[y * CHUNK_WIDTH + x] = Block(Bm_t(biomeArr[x + BIOME_ITPL_RDS]));
+			if (blockAtGet(y, x).ID == BlockN::water || blockAtGet(y, x).ID == BlockN::lava)
+				blockAtSet(y, x) = Block(16);
+			else if (blockAtGet(y, x).ID != BlockN::air)
+				blockAtSet(y, x) = Block(Bm_t(biomeAtGet(x)));
 }
 
 
 
 inline constexpr       Block& TerrainGen::blockAtSet(BlkCrd y, BlkCrd x) const
 {
-	if (x >= 0 && x < CHUNK_WIDTH && y >= 0 && y < CHUNK_HEIGHT)
+	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
 		return dataRef[y * CHUNK_WIDTH + x];
 	return BlNullRefSet;
 }
 inline constexpr const Block& TerrainGen::blockAtGet(BlkCrd y, BlkCrd x) const
 {
-	if (x >= 0 && x < CHUNK_WIDTH && y >= 0 && y < CHUNK_HEIGHT)
+	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
 		return dataRef[y * CHUNK_WIDTH + x];
 	return BlNullRefGet;
 }
 
 inline constexpr const BiomeN& TerrainGen::biomeAtGet(BlkCrd x) const
 {
-	BlkCrd i = x + BIOME_OFFSET;
-	if (i >= 0 && i < BIOME_WIDTH)
+	size_t i = x + BIOME_OFFSET;
+	if (i < BIOME_WIDTH)
 		return biomeArr[i];
 	return BmNullRefGet;
 }
 
 inline constexpr const BlkCrd& TerrainGen::heightAtGet(BlkCrd x) const
 {
-	BlkCrd i = x + TERRAIN_OFFSET;
-	if (i >= 0 && i < TERRAIN_WIDTH)
+	size_t i = x + TERRAIN_OFFSET;
+	if (i < TERRAIN_WIDTH)
 		return heightArr[i];
 	return HtNullRefGet;
 }

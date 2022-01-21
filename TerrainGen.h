@@ -15,10 +15,10 @@
 #include "Chunk.h"
 
 
-enum class BiomeN { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
+enum class BiomeN : uint32_t { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
 typedef std::underlying_type_t<BiomeN> Bm_t;
 
-enum class StrctrN { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Accacia, Redwood, Igloo, Coral, MAX };
+enum class StrctrN : uint32_t { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Accacia, Redwood, Igloo, Coral, MAX };
 typedef std::underlying_type_t<StrctrN> St_t;
 
 template<size_t L = BIOME_ITPL_RDS>

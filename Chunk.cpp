@@ -6,7 +6,6 @@
 #include "Chunk.h"
 #include "TerrainGen.h"
 
-#include "Perlin.h"
 
 #if DEBUG_RENDER_ARRAYS
 static constexpr auto pointsArr = generate_vertices<>();
@@ -31,18 +30,18 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 		std::ifstream chunkFile(path, std::ios_base::binary);
 		if (chunkFile.good())
 		{
-			std::istream_iterator<byte> v1(chunkFile >> std::noskipws);
-			std::istream_iterator<byte> v2;
-			std::vector<byte> bytesBuffer(v1, v2);
+			std::istream_iterator<uint8_t> v1(chunkFile >> std::noskipws);
+			std::istream_iterator<uint8_t> v2;
+			std::vector<uint8_t> bytesBuffer(v1, v2);
 
-			uint blockID = 0;
+			Bl_t blockID = 0;
 			std::size_t pos = 0;
 
-			for (byte bt : bytesBuffer)
+			for (uint8_t bt : bytesBuffer)
 			{
 				// VarInt read
-				blockID |= bt & 127;
-				if (bt & 128)
+				blockID |= bt & (uint8_t)127;
+				if (bt & (uint8_t)128)
 					blockID <<= 7;
 				else
 				{
@@ -79,7 +78,7 @@ Chunk::~Chunk()
 
 
 
-void setColor(uint block)
+void setColor(Bl_t block)
 {
 	switch (block)
 	{
@@ -228,8 +227,8 @@ void Chunk::draw() const
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glBegin(GL_QUADS);                  // Each set of 4 vertices form a quad
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		uint yBcrd = 0;
-		uint xBcrd = 0;
+		size_t yBcrd = 0;
+		size_t xBcrd = 0;
 		for (Block block : blocks)
 		{
 			glVertex2f(xBcrd, yBcrd);
@@ -271,35 +270,35 @@ bool Chunk::save() const
 
 		for (Block block : blocks)
 		{
-			uint blockID = uint(Bl_t(block.ID));
+			Bl_t blockID = Bl_t(block.ID);
 //		std::cout << "Write: " << blockID << "\t";
 			// VarInt write
-			byte buffer[5] = { 0 };
-			buffer[0] = (blockID >> 28) & 127 | 128;
-			buffer[1] = (blockID >> 21) & 127 | 128;
-			buffer[2] = (blockID >> 14) & 127 | 128;
-			buffer[3] = (blockID >> 7) & 127 | 128;
-			buffer[4] = (blockID) & 127;
+			uint8_t buffer[5];
+			buffer[0] = (blockID >> 28) & (uint8_t)127 | (uint8_t)128;
+			buffer[1] = (blockID >> 21) & (uint8_t)127 | (uint8_t)128;
+			buffer[2] = (blockID >> 14) & (uint8_t)127 | (uint8_t)128;
+			buffer[3] = (blockID >> 7)  & (uint8_t)127 | (uint8_t)128;
+			buffer[4] = (blockID)       & (uint8_t)127;
 
-			if (blockID >= (uint)1 << 28)
+			if (blockID >= (Bl_t)1 << 28)
 			{
 				chunkFile << buffer[0];
 //				std::cout << (uint)buffer[0] << " ";
 			}
 
-			if (blockID >= (uint)1 << 21)
+			if (blockID >= (Bl_t)1 << 21)
 			{
 				chunkFile << buffer[1];
 //				std::cout << (uint)buffer[1] << " ";
 			}
 
-			if (blockID >= (uint)1 << 14)
+			if (blockID >= (Bl_t)1 << 14)
 			{
 				chunkFile << buffer[2];
 //				std::cout << (uint)buffer[2] << " ";
 			}
 
-			if (blockID >= (uint)1 << 7)
+			if (blockID >= (Bl_t)1 << 7)
 			{
 				chunkFile << buffer[3];
 //				std::cout << (uint)buffer[3] << " ";
@@ -318,7 +317,7 @@ bool Chunk::save() const
 
 void Chunk::testFill()
 {
-	uint xd = 0;
+	size_t xd = 0;
 	for (Block& block : blocks)
 		block = Block(xd++);
 

@@ -1,13 +1,12 @@
 #pragma once
-typedef unsigned int uint;
-typedef unsigned char uchar;
-typedef unsigned char byte;
 
-//typedef float EntCrd; // Entity Coordinate Type
-typedef double EntCrd; // Entity Coordinate Type
-typedef int    BlkCrd; // Block Coordinate Type
-typedef int    ChkCrd; // Chunk Coordinate Type
+#include <type_traits>
 
-typedef double TDT; // Time Difference Type
+typedef std::make_signed<size_t>::type BlkCrd; // Block Coordinate Type
+typedef std::make_signed<size_t>::type ChkCrd; // Chunk Coordinate Type
 
-typedef unsigned char ClrT;
+typedef float EntCrd; // Entity Coordinate Type
+
+typedef float TDT; // Time Difference Type
+
+typedef unsigned char ClrT; // color type

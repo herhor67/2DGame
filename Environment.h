@@ -102,8 +102,8 @@ struct Environment
 
 
 EntCrd getDistSq(Pos, Pos);
-EntCrd getDist(Pos, Pos);
 EntCrd getDistSq(EntCrd, EntCrd);
-EntCrd getDist(EntCrd, EntCrd);
+//EntCrd getDist(Pos, Pos);
+//EntCrd getDist(EntCrd, EntCrd);
 
 std::pair<bool, Pos> findIntersect(Pos, Pos, Pos, Pos);

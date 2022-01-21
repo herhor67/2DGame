@@ -18,23 +18,25 @@ void Pos::cout() const
 
 EntCrd getDistSq(Pos p1, Pos p2)
 {
-	return pow(p1.X - p2.X, 2) + pow(p1.Y - p2.Y, 2);
-}
-
-EntCrd getDist(Pos p1, Pos p2)
-{
-	return sqrt(pow(p1.X - p2.X, 2) + pow(p1.Y - p2.Y, 2));
+	return (p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y);
 }
 
 EntCrd getDistSq(EntCrd d1, EntCrd d2)
 {
-	return pow(d1, 2) + pow(d2, 2);
+	return d1 * d1 + d2 * d2;
+}
+
+/*
+EntCrd getDist(Pos p1, Pos p2)
+{
+	return sqrt(pow(p1.X - p2.X, 2) + pow(p1.Y - p2.Y, 2));
 }
 
 EntCrd getDist(EntCrd d1, EntCrd d2)
 {
 	return sqrt(pow(d1, 2) + pow(d2, 2));
 }
+*/
 
 
 
