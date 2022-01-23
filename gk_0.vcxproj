@@ -34,7 +34,6 @@
     <ClInclude Include="Filesystem.h" />
     <ClInclude Include="functions.h" />
     <ClInclude Include="TerrainGen.h" />
-    <ClInclude Include="typedefs.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="FastNoise2_32\bin\FastNoise.dll">
@@ -44,7 +43,7 @@
     <CopyFileToFolders Include="FastNoise2_32\bin\FastNoiseD.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CopyFileToFolders>
   </ItemGroup>
   <PropertyGroup Label="Globals">

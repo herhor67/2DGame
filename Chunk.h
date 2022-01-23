@@ -1,5 +1,5 @@
 #pragma once
-#define NOMINMAX 1
+#include "defines.h"
 
 #include <algorithm>
 #include <array>
@@ -8,12 +8,8 @@
 #include <map>
 #include <string>
 
-
-#include <FastNoise/FastNoise.h>
 #include "GL/glut.h"
 
-#include "typedefs.h"
-#include "defines.h"
 #include "functions.h"
 
 #include "Block.h"

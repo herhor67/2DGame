@@ -1,11 +1,10 @@
-
 #
+#include "Entity.h"
 
 #include <iostream>
 
 #include "GL/glut.h"
 
-#include "Entity.h"
 
 
 Entity::Entity(float _mass, float _height, float _width, EntCrd _Xpos, EntCrd _Ypos, float _Xvel, float _Yvel, float _Xacc, float _Yacc) : mass(_mass), height(_height), width(_width), pos({ _Xpos, _Ypos }), vel({ _Xvel, _Yvel }), acc({ _Xacc, _Yacc }) {}

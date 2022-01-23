@@ -1,28 +1,25 @@
 #
-#define NOMINMAX 1
+#include "defines.h"
 
 #include <iostream>
 #include <string>
 #include "Filesystem.h"
-#include "Perlin.h"
 
-#define GLUT_DISABLE_ATEXIT_HACK
-#define GLUT_API_VERSION 4
 #include "GL/glut.h"
+
+
 #include <FastNoise/FastNoise.h>
 
 #include "ChunkManager.h"
 #include "Entity.h"
 
-#include "typedefs.h"
-#include "defines.h"
 #include "functions.h"
 
 using namespace std;
 
 
 
-char title[] = "The Game";  // Windowed mode's title
+char title[] = "Herraria";  // Windowed mode's title
 int windowedWidth = 1440;     // Windowed mode's width
 int windowedHeight = 810;     // Windowed mode's height
 int windowedPosX = 1000;      // Windowed mode's top-left corner x
@@ -516,6 +513,7 @@ int main(int argc, char** argv)
 #endif
 
 	// Unit Tests
+	/*/
 	{
 		vector<Pos> xd = interpolate(player.posBLrel(), player.posBRrel(), 3);
 		cout << "Pos interpolation test: " << endl;
@@ -532,14 +530,6 @@ int main(int argc, char** argv)
 		for (BlkCrd& t : test)
 			cout << t << '\t';
 		cout << endl;
-
-		cout << "Perlin test: " << endl;
-		const siv::PerlinNoise perlin;
-		for (size_t i = 0; i <= 10; ++i)
-			cout << perlin.octave1D(float(i) / 100, 1) << endl;
-		const siv::PerlinNoise perlin2;
-		for (size_t i = 0; i <= 10; ++i)
-			cout << perlin2.octave1D(float(i) / 100, 1) << endl;
 
 		cout << "Noise generator test:" << endl;
 		std::vector<float> noiseOutput(3 * 3 * 2);
@@ -563,7 +553,7 @@ int main(int argc, char** argv)
 		Block xd2 = BlockN::bedrock;
 		std::cout << Bl_t(xd2.ID) << endl;
 	}
-	
+	//*/
 
 //	system("pause");
 //	return 0;

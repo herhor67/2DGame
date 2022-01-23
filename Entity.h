@@ -1,9 +1,8 @@
 #pragma once
+#include "defines.h"
 
 #include <utility>
 
-#include "typedefs.h"
-#include "defines.h"
 #include "functions.h"
 
 #include "Environment.h"

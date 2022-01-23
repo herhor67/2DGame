@@ -1,9 +1,7 @@
 #pragma once
+#include "defines.h"
 
 #include <utility>
-
-#include "typedefs.h"
-#include "defines.h"
 
 struct Pos
 {

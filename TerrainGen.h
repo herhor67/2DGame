@@ -1,5 +1,5 @@
 #pragma once
-#define _USE_MATH_DEFINES 1
+#include "defines.h"
 
 #include <cmath>
 #include <functional>
@@ -8,8 +8,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include "typedefs.h"
-#include "defines.h"
+#include <FastNoise/FastNoise.h>
+
 #include "functions.h"
 
 #include "Chunk.h"

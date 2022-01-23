@@ -1,4 +1,5 @@
 #pragma once
+#include "defines.h"
 
 #include <algorithm>
 #include <array>
@@ -10,8 +11,6 @@
 
 #include "gcem.hpp"
 
-#include "defines.h"
-#include "typedefs.h"
 
 
 

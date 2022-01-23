@@ -1,9 +1,7 @@
 #pragma once
+#include "defines.h"
 
 #include <map>
-
-#include "typedefs.h"
-#include "defines.h"
 
 #include "Chunk.h"
 #include "Environment.h"

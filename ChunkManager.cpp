@@ -1,12 +1,11 @@
-#define NOMINMAX 1
+#
+#include "ChunkManager.h"
 
 #include <iostream>
 #include <limits>
 #include "Filesystem.h"
 
 #include "GL/glut.h"
-
-#include "ChunkManager.h"
 
 #include "functions.h"
 

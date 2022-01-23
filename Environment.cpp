@@ -1,13 +1,10 @@
 #
+#include "Environment.h"
 
 #include <iostream>
 #include <iomanip>
 #include <limits>
 
-#include "defines.h"
-#include "typedefs.h"
-
-#include "Environment.h"
 
 
 void Pos::cout() const

@@ -1,6 +1,10 @@
 #pragma once
 #include "FastNoise_Config.h"
 
+#if FASTNOISE_STATIC_LIB
+
+#endif
+
 // Node class definitions
 #include "Generators/BasicGenerators.h"
 #include "Generators/Value.h"

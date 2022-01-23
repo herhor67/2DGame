@@ -1,6 +1,4 @@
 #pragma once
-
-#include "typedefs.h"
 #include "defines.h"
 
 #include "Environment.h"

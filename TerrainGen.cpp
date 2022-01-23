@@ -1,7 +1,10 @@
+#include "TerrainGen.h"
 
 #include <span>
+
 #include "functions.h"
-#include "TerrainGen.h"
+
+
 
 
 std::once_flag TerrainGen::noiseInitFlag = std::once_flag();

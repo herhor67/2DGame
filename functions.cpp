@@ -1,8 +1,9 @@
 #
+#include "functions.h"
 
 #include "GL/glut.h"
 
-#include "functions.h"
+
 
 extern int currentWindowWidth;
 extern int currentWindowHeight;
