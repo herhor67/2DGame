@@ -532,7 +532,7 @@ int main(int argc, char** argv)
 		cout << endl;
 
 		cout << "Noise generator test:" << endl;
-		std::vector<float> noiseOutput(3 * 3 * 2);
+		std::vector<float> noiseOutput(4 * 2);
 		FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CgABAAAAAAAAAAAAAIA/");
 		fnGenerator->GenUniformGrid2D(noiseOutput.data(), 0, 0, 4, 2, 0.2f, 1337);
 		int index = 0;

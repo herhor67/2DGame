@@ -47,6 +47,18 @@ constexpr auto generate_gauss_interpolation()
 }
 
 
+class TerrainGenStaticGenerators
+{
+private:
+	FastNoise::SmartNode<FastNoise::CellularValue> biome;
+	FastNoise::SmartNode<FastNoise::FractalFBm> perlin;
+	FastNoise::SmartNode<FastNoise::FractalFBm> simplex;
+	FastNoise::SmartNode<FastNoise::Remap> structure;
+
+	friend class TerrainGen;
+};
+
+
 class TerrainGen
 {
 	ChkCrd Xpos = INT_MIN;

@@ -8,10 +8,15 @@
 
 
 std::once_flag TerrainGen::noiseInitFlag = std::once_flag();
-FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator   = FastNoise::New<FastNoise::CellularValue>();
-FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::perlinGenerator  = FastNoise::New<FastNoise::FractalFBm>();
-FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::simplexGenerator = FastNoise::New<FastNoise::FractalFBm>();
-FastNoise::SmartNode<FastNoise::Remap>         TerrainGen::plantGenerator   = FastNoise::New<FastNoise::Remap>();
+//FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator   = FastNoise::New<FastNoise::CellularValue>();
+//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::perlinGenerator  = FastNoise::New<FastNoise::FractalFBm>();
+//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::simplexGenerator = FastNoise::New<FastNoise::FractalFBm>();
+//FastNoise::SmartNode<FastNoise::Remap>         TerrainGen::plantGenerator   = FastNoise::New<FastNoise::Remap>();
+
+FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator;
+FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::perlinGenerator;
+FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::simplexGenerator;
+FastNoise::SmartNode<FastNoise::Remap>         TerrainGen::plantGenerator;
 
       Block  TerrainGen::BlNullRefSet = BlockN::MAX;
 const Block  TerrainGen::BlNullRefGet = BlockN::MAX;
@@ -23,6 +28,11 @@ TerrainGen::TerrainGen(ChkCrd _Xpos, std::array<Block, CHUNK_BLOCKNUM>& _dataRef
 {
 	std::call_once(noiseInitFlag, []()
 		{
+			biomeGenerator = FastNoise::New<FastNoise::CellularValue>();
+			perlinGenerator = FastNoise::New<FastNoise::FractalFBm>();
+			simplexGenerator = FastNoise::New<FastNoise::FractalFBm>();
+			plantGenerator = FastNoise::New<FastNoise::Remap>();
+
 			biomeGenerator->SetJitterModifier(0.7f);
 
 			perlinGenerator->SetSource(FastNoise::New<FastNoise::Perlin>());
