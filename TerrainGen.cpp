@@ -5,14 +5,9 @@
 #include "functions.h"
 
 
-
+// StaticGenerators TerrainGen::generators = StaticGenerators();
 
 std::once_flag TerrainGen::noiseInitFlag = std::once_flag();
-//FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator   = FastNoise::New<FastNoise::CellularValue>();
-//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::perlinGenerator  = FastNoise::New<FastNoise::FractalFBm>();
-//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::simplexGenerator = FastNoise::New<FastNoise::FractalFBm>();
-//FastNoise::SmartNode<FastNoise::Remap>         TerrainGen::plantGenerator   = FastNoise::New<FastNoise::Remap>();
-
 FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator;
 FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::perlinGenerator;
 FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::simplexGenerator;

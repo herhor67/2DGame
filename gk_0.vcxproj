@@ -33,6 +33,7 @@
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Filesystem.h" />
     <ClInclude Include="functions.h" />
+    <ClInclude Include="StaticGenerators.h" />
     <ClInclude Include="TerrainGen.h" />
   </ItemGroup>
   <ItemGroup>

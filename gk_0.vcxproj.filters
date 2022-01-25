@@ -71,6 +71,9 @@
     <ClInclude Include="BlockColors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StaticGenerators.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="FastNoise2_32\bin\FastNoise.dll">

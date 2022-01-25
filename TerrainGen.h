@@ -8,11 +8,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include <FastNoise/FastNoise.h>
-
 #include "functions.h"
 
 #include "Chunk.h"
+#include "StaticGenerators.h"
 
 
 enum class BiomeN : uint32_t { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
@@ -47,18 +46,6 @@ constexpr auto generate_gauss_interpolation()
 }
 
 
-class TerrainGenStaticGenerators
-{
-private:
-	FastNoise::SmartNode<FastNoise::CellularValue> biome;
-	FastNoise::SmartNode<FastNoise::FractalFBm> perlin;
-	FastNoise::SmartNode<FastNoise::FractalFBm> simplex;
-	FastNoise::SmartNode<FastNoise::Remap> structure;
-
-	friend class TerrainGen;
-};
-
-
 class TerrainGen
 {
 	ChkCrd Xpos = INT_MIN;
@@ -67,6 +54,8 @@ class TerrainGen
 	std::unordered_set<BiomeN> biomesUnq;
 	std::array<BlkCrd, TERRAIN_WIDTH> heightArr{};
 	std::array<bool, CHUNK_BLOCKNUM> caves{};
+
+	// 	static StaticGenerators generators;
 
 	static std::once_flag noiseInitFlag;
 	static FastNoise::SmartNode<FastNoise::CellularValue> biomeGenerator;
