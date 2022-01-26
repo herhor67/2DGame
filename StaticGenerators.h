@@ -3,38 +3,85 @@
 
 #include <FastNoise/FastNoise.h>
 
-class StaticGenerators
+#include "TimeDiff.h"
+
+class Generators
 {
 private:
 	FastNoise::SmartNode<FastNoise::CellularValue> biome;
 	FastNoise::SmartNode<FastNoise::FractalFBm> perlin;
 	FastNoise::SmartNode<FastNoise::FractalFBm> simplex;
-	FastNoise::SmartNode<FastNoise::Remap> structure;
+	FastNoise::SmartNode<FastNoise::Remap> strctr;
+	FastNoise::SmartNode<FastNoise::Remap> rand;
 
-	StaticGenerators();
+	Generators(const Generators&) = delete;
+	void operator=(const Generators&) = delete;
+
+	Generators();
+	~Generators();
+
+	template <float J = 0.0f, FastNoise::DistanceFunction DF = FastNoise::DistanceFunction::EuclideanSquared>
+	static const auto& cellularRemap()
+	{
+//		auto t1 = std::chrono::steady_clock::now();
+
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: CellularValue, J=" << J << ", DF=" << FastNoise::kDistanceFunction_Strings[(int)DF] << std::endl;
+#endif
+			static auto generator = FastNoise::New<FastNoise::CellularValue>();
+			generator->SetJitterModifier(J);
+			generator->SetDistanceFunction(DF);
+			return generator;
+		}();
+
+//		std::cout << &generatorRef << "\t" << duration2readable(t1) << std::endl;
+
+		return generatorRef;
+	}
+
+
+	template <float G = 0.5f, int O = 3, float L = 2.0f>
+	static const auto& perlinFractal()
+	{
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: Fractal<Perlin>, G=" << G << ", O=" << O << ", L=" << L << std::endl;
+#endif
+			static auto generator = FastNoise::New<FastNoise::FractalFBm>();
+			generator->SetSource(FastNoise::New<FastNoise::Perlin>());
+			generator->SetOctaveCount(O);
+			generator->SetGain(G);
+			generator->SetLacunarity(L);
+			return generator;
+		}();
+		return generatorRef;
+	}
+
+
+	template <float G = 0.5f, int O = 3, float L = 2.0f>
+	static const auto& simplexFractal()
+	{
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: Fractal<Simplex>, G=" << G << ", O=" << O << ", L=" << L << std::endl;
+#endif
+			static auto generator = FastNoise::New<FastNoise::FractalFBm>();
+			generator->SetSource(FastNoise::New<FastNoise::Simplex>());
+			generator->SetOctaveCount(O);
+			generator->SetGain(G);
+			generator->SetLacunarity(L);
+			return generator;
+		}();
+		return generatorRef;
+	}
+
+
+	static const Generators& Get();
 
 	friend class TerrainGen;
 };
 
-StaticGenerators::StaticGenerators()
-{
-	biome     = FastNoise::New<FastNoise::CellularValue>();
-	perlin    = FastNoise::New<FastNoise::FractalFBm>();
-	simplex   = FastNoise::New<FastNoise::FractalFBm>();
-	structure = FastNoise::New<FastNoise::Remap>();
-
-	biome->SetJitterModifier(0.7f);
-
-	perlin->SetSource(FastNoise::New<FastNoise::Perlin>());
-	perlin->SetOctaveCount(3);
-	perlin->SetGain(0.5f);
-	perlin->SetLacunarity(2.0f);
-
-	simplex->SetSource(FastNoise::New<FastNoise::Simplex>());
-	simplex->SetOctaveCount(3);
-	simplex->SetGain(0.5f);
-	simplex->SetLacunarity(2.0f);
-
-	structure->SetSource(FastNoise::New<FastNoise::White>());
-	structure->SetRemap(-1.0f, 1.0f, 0.0f, 1.0f);
-}

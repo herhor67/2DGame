@@ -21,6 +21,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="StaticGenerators.cpp" />
     <ClCompile Include="TerrainGen.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -35,6 +36,7 @@
     <ClInclude Include="functions.h" />
     <ClInclude Include="StaticGenerators.h" />
     <ClInclude Include="TerrainGen.h" />
+    <ClInclude Include="TimeDiff.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="FastNoise2_32\bin\FastNoise.dll">

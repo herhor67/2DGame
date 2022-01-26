@@ -39,6 +39,9 @@
     <ClCompile Include="Environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StaticGenerators.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChunkManager.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StaticGenerators.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeDiff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

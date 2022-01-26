@@ -55,13 +55,7 @@ class TerrainGen
 	std::array<BlkCrd, TERRAIN_WIDTH> heightArr{};
 	std::array<bool, CHUNK_BLOCKNUM> caves{};
 
-	// 	static StaticGenerators generators;
-
-	static std::once_flag noiseInitFlag;
-	static FastNoise::SmartNode<FastNoise::CellularValue> biomeGenerator;
-	static FastNoise::SmartNode<FastNoise::FractalFBm> perlinGenerator;
-	static FastNoise::SmartNode<FastNoise::FractalFBm> simplexGenerator;
-	static FastNoise::SmartNode<FastNoise::Remap> plantGenerator;
+	const Generators& generators;
 
 	static       Block  BlNullRefSet;
 	static const Block  BlNullRefGet;

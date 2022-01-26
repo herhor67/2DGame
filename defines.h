@@ -117,6 +117,9 @@ static constexpr float ENV_GRAVITY = -9.81f;
 #define CONSOLE_LOG_CHUNKS 0
 #define CONSOLE_LOG_GENERATION 0
 #define CONSOLE_LOG_MOVEMENT 0
+#define CONSOLE_LOG_GENERATORS 1
+
+#include <iostream>
 
 #define DEBUG_COLOR_BIOMES 0
 #define DEBUG_RENDER_ARRAYS 1
