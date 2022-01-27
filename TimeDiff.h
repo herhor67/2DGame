@@ -3,7 +3,7 @@
 #include <chrono>
 
 
-inline std::string duration2readable(std::chrono::steady_clock::time_point beg, std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now())
+static std::string duration2readable(std::chrono::steady_clock::time_point beg, std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now())
 {
 	std::chrono::nanoseconds time_left = end - beg;
 
@@ -21,13 +21,13 @@ inline std::string duration2readable(std::chrono::steady_clock::time_point beg, 
 	time_left -= us;
 	std::chrono::nanoseconds  ns = std::chrono::duration_cast<std::chrono::nanoseconds >(time_left);
 
-	int  dc =  d.count();
-	int  hc =  h.count();
-	int  mc =  m.count();
-	int  sc =  s.count();
-	int msc = ms.count();
-	int usc = us.count();
-	int nsc = ns.count();
+	auto  dc =  d.count();
+	auto  hc =  h.count();
+	auto  mc =  m.count();
+	auto  sc =  s.count();
+	auto msc = ms.count();
+	auto usc = us.count();
+	auto nsc = ns.count();
 
 	std::stringstream ss;
 	ss.fill('0');

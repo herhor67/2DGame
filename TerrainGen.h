@@ -55,7 +55,7 @@ class TerrainGen
 	std::array<BlkCrd, TERRAIN_WIDTH> heightArr{};
 	std::array<bool, CHUNK_BLOCKNUM> caves{};
 
-	const Generators& generators;
+//	const Generators& generators;
 
 	static       Block  BlNullRefSet;
 	static const Block  BlNullRefGet;
@@ -80,12 +80,10 @@ class TerrainGen
 
 	inline void generate_structure(StrctrN, BlkCrd) const;
 
-	
-	inline constexpr Block& blockAtSet(BlkCrd, BlkCrd) const;
-	inline constexpr const Block& blockAtGet(BlkCrd, BlkCrd) const;
-	inline constexpr const BiomeN& biomeAtGet(BlkCrd) const;
-	inline constexpr const BlkCrd& heightAtGet(BlkCrd) const;
-
+	inline Block& blockAtSet(BlkCrd, BlkCrd) const;
+	inline const Block& blockAtGet(BlkCrd, BlkCrd) const;
+	inline const BiomeN& biomeAtGet(BlkCrd) const;
+	inline const BlkCrd& heightAtGet(BlkCrd) const;
 
 
 public:

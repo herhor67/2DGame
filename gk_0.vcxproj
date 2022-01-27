@@ -21,7 +21,6 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="StaticGenerators.cpp" />
     <ClCompile Include="TerrainGen.cpp" />
   </ItemGroup>
   <ItemGroup>

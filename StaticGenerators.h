@@ -1,57 +1,136 @@
 #pragma once
 #include "defines.h"
 
+#include <typeinfo>
+
 #include <FastNoise/FastNoise.h>
 
 #include "TimeDiff.h"
 
-class Generators
+
+
+namespace Generators
 {
-private:
-	FastNoise::SmartNode<FastNoise::CellularValue> biome;
-	FastNoise::SmartNode<FastNoise::FractalFBm> perlin;
-	FastNoise::SmartNode<FastNoise::FractalFBm> simplex;
-	FastNoise::SmartNode<FastNoise::Remap> strctr;
-	FastNoise::SmartNode<FastNoise::Remap> rand;
+	using namespace FastNoise;
 
-	Generators(const Generators&) = delete;
-	void operator=(const Generators&) = delete;
+	//		auto t1 = std::chrono::steady_clock::now();
+	//		std::cout << &generatorRef << "\t" << duration2readable(t1) << std::endl;
 
-	Generators();
-	~Generators();
-
-	template <float J = 0.0f, FastNoise::DistanceFunction DF = FastNoise::DistanceFunction::EuclideanSquared>
-	static const auto& cellularRemap()
+	static const auto& white()
 	{
-//		auto t1 = std::chrono::steady_clock::now();
-
 		static const auto& generatorRef = []()
 		{
 #if CONSOLE_LOG_GENERATORS
-			std::cout << "Generator created: CellularValue, J=" << J << ", DF=" << FastNoise::kDistanceFunction_Strings[(int)DF] << std::endl;
+			std::cout << "Generator created: WhiteNoise" << std::endl;
 #endif
-			static auto generator = FastNoise::New<FastNoise::CellularValue>();
+			static auto generator = New<White>();
+			return generator;
+		}();
+
+		return generatorRef;
+	}
+
+
+
+	static const auto& white01()
+	{
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: WhiteNoise01" << std::endl;
+#endif
+			static auto generator = New<Remap>();
+			generator->SetSource(New<White>());
+			generator->SetRemap(-1.0f, 1.0f, 0.0f, 1.0f);
+			return generator;
+		}();
+
+		return generatorRef;
+	}
+
+
+
+	static const auto& perlin()
+	{
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: PerlinNoise" << std::endl;
+#endif
+			static auto generator = New<Perlin>();
+			return generator;
+		}();
+
+		return generatorRef;
+	}
+
+
+
+	template <float J = 1.0f, DistanceFunction DF = DistanceFunction::EuclideanSquared>
+	static const auto& cellular()
+	{
+		static const auto& generatorRef = []()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: CellularValue, J=" << J << ", DF=" << kDistanceFunction_Strings[(int)DF] << std::endl;
+#endif
+			static auto generator = New<CellularValue>();
 			generator->SetJitterModifier(J);
 			generator->SetDistanceFunction(DF);
 			return generator;
 		}();
-
-//		std::cout << &generatorRef << "\t" << duration2readable(t1) << std::endl;
-
 		return generatorRef;
 	}
 
-
-	template <float G = 0.5f, int O = 3, float L = 2.0f>
-	static const auto& perlinFractal()
+	/*
+	
+	template <float G = 0.5f, int O = 3, float L = 2.0f, typename T, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
+	static const auto& fractalBM(const SmartNode<T>& S)
 	{
-		static const auto& generatorRef = []()
+		static const auto& generatorRef = [&]()
 		{
 #if CONSOLE_LOG_GENERATORS
-			std::cout << "Generator created: Fractal<Perlin>, G=" << G << ", O=" << O << ", L=" << L << std::endl;
+			std::cout << "Generator created: FractalBm<" << typeid(T).name() << ">, G=" << G << ", O=" << O << ", L=" << L << ", S=" << &S << std::endl;
 #endif
-			static auto generator = FastNoise::New<FastNoise::FractalFBm>();
-			generator->SetSource(FastNoise::New<FastNoise::Perlin>());
+			static auto generator = New<FractalFBm>();
+			generator->SetSource(S);
+			generator->SetOctaveCount(O);
+			generator->SetGain(G);
+			generator->SetLacunarity(L);
+			return generator;
+		}();
+		return generatorRef;
+	}
+	*/
+
+	template <typename T, float G = 0.5f, int O = 3, float L = 2.0f, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
+	static const auto& fractalBM()
+	{
+		static const auto& generatorRef = [&]()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: FractalBm<" << typeid(T).name() << ">, G=" << G << ", O=" << O << ", L=" << L << ", S=New" << std::endl;
+#endif
+			static auto generator = New<FractalFBm>();
+			generator->SetSource(New<T>());
+			generator->SetOctaveCount(O);
+			generator->SetGain(G);
+			generator->SetLacunarity(L);
+			return generator;
+		}();
+		return generatorRef;
+	}
+
+	template <typename T, float G = 0.5f, int O = 3, float L = 2.0f, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
+	static const auto& fractalDR()
+	{
+		static const auto& generatorRef = [&]()
+		{
+#if CONSOLE_LOG_GENERATORS
+			std::cout << "Generator created: FractalDR<" << typeid(T).name() << ">, G=" << G << ", O=" << O << ", L=" << L << ", S=New" << std::endl;
+#endif
+			static auto generator = New<FractalRidged>();
+			generator->SetSource(New<T>());
 			generator->SetOctaveCount(O);
 			generator->SetGain(G);
 			generator->SetLacunarity(L);
@@ -61,27 +140,5 @@ private:
 	}
 
 
-	template <float G = 0.5f, int O = 3, float L = 2.0f>
-	static const auto& simplexFractal()
-	{
-		static const auto& generatorRef = []()
-		{
-#if CONSOLE_LOG_GENERATORS
-			std::cout << "Generator created: Fractal<Simplex>, G=" << G << ", O=" << O << ", L=" << L << std::endl;
-#endif
-			static auto generator = FastNoise::New<FastNoise::FractalFBm>();
-			generator->SetSource(FastNoise::New<FastNoise::Simplex>());
-			generator->SetOctaveCount(O);
-			generator->SetGain(G);
-			generator->SetLacunarity(L);
-			return generator;
-		}();
-		return generatorRef;
-	}
-
-
-	static const Generators& Get();
-
-	friend class TerrainGen;
-};
+}
 

@@ -46,7 +46,7 @@ int currentWindowHeight;
 
 GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
 
-int zoomoutLvl = ZOOMOUT_LVLS / 2;
+int zoomoutLvl = ZOOMOUT_LVLS;
 float ZOOMOUT = 400.0f;
 
 
@@ -474,8 +474,8 @@ int main(int argc, char** argv)
 {
 	std::ios_base::sync_with_stdio(false);
 
-	player.pos = { 0.0f, WATER_LEVEL };
-//	player.pos = { 0.0f, 127.0f };
+//	player.pos = { 0.0f, WATER_LEVEL };
+	player.pos = { 0.0f, 127.0f };
 
 
 	glutInit(&argc, argv);            // Initialize GLUT

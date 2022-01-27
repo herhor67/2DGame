@@ -5,13 +5,6 @@
 #include "functions.h"
 
 
-//Generators TerrainGen::generators; //  = Generators()
-
-//std::once_flag TerrainGen::noiseInitFlag = std::once_flag();
-//FastNoise::SmartNode<FastNoise::CellularValue> TerrainGen::biomeGenerator;
-//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::Generators::perlinFractal<, , >();
-//FastNoise::SmartNode<FastNoise::FractalFBm>    TerrainGen::generators.simplex;
-//FastNoise::SmartNode<FastNoise::Remap>         TerrainGen::generators.rand;
 
       Block  TerrainGen::BlNullRefSet = BlockN::MAX;
 const Block  TerrainGen::BlNullRefGet = BlockN::MAX;
@@ -19,7 +12,7 @@ const BiomeN TerrainGen::BmNullRefGet = BiomeN::MIN;
 const BlkCrd TerrainGen::HtNullRefGet = INT_MIN;
 
 
-TerrainGen::TerrainGen(ChkCrd _Xpos, std::array<Block, CHUNK_BLOCKNUM>& _dataRef) : Xpos(_Xpos), dataRef(_dataRef), generators(Generators::Get()) { }
+TerrainGen::TerrainGen(ChkCrd _Xpos, std::array<Block, CHUNK_BLOCKNUM>& _dataRef) : Xpos(_Xpos), dataRef(_dataRef) { }
 
 TerrainGen::~TerrainGen() { }
 
@@ -28,7 +21,7 @@ void TerrainGen::get_biomes()
 {
 	std::array<float, BIOME_WIDTH> biomeNoise{};
 
-	Generators::cellularRemap<0.7f>()->GenUniformGrid2D(biomeNoise.data(), Xpos * CHUNK_WIDTH - BIOME_OFFSET, 0, BIOME_WIDTH, 1, 0.003f, 123455);
+	Generators::cellular<0.7f, FastNoise::DistanceFunction::Hybrid>()->GenUniformGrid2D(biomeNoise.data(), Xpos * CHUNK_WIDTH - BIOME_OFFSET, 0, BIOME_WIDTH, 1, 0.003f, 123455);
 	
 	for (BlkCrd i = 0; i < BIOME_WIDTH; ++i)
 	{
@@ -38,7 +31,7 @@ void TerrainGen::get_biomes()
 		Bm_t choosen = remap01_dsc(Bm_t(BiomeN::MIN) + 1, Bm_t(BiomeN::MAX) - 1, value);
 		BiomeN biome = BiomeN(choosen);
 
-//		biome = BiomeN::Polar;
+//		biome = BiomeN::Mountains;
 
 		biomeArr[i] = biome;
 		biomesUnq.insert(biome);
@@ -65,15 +58,15 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 	switch (biome)
 	{
 	case BiomeN::Polar:
-		Generators::perlinFractal<0.5f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.005f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 0.5f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.005f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.75f + WATER_LEVEL;
 		break;
 
-
+		
 	case BiomeN::Taiga:
-		Generators::perlinFractal<2.0f, 2, 2.5f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 2.0f, 2, 2.5f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.15f + WATER_LEVEL * 1.02f;
@@ -81,15 +74,15 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Mountains:
-		Generators::perlinFractal<0.6f, 3, 3.14159f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.003f, 123456);
+		Generators::fractalDR<FastNoise::Perlin, 1.999f, 4, 2.2f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.002f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
-			ptr[i] = heightNoise[i] * CHUNK_HEIGHT * 0.8f + CHUNK_HEIGHT * 0.5f;
+			ptr[i] = heightNoise[i] * CHUNK_HEIGHT * 0.5f + WATER_LEVEL * 0.8f;
 		break;
 
 
 	case BiomeN::Ocean:
-		Generators::perlinFractal<0.5f, 5, 3.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.001f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 0.5f, 5, 3.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.001f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = std::fabs(heightNoise[i]) * WATER_LEVEL * 2.0f + WATER_LEVEL * 0.2f;
@@ -97,7 +90,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Hills:
-		Generators::perlinFractal<0.5f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 0.5f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.9f + WATER_LEVEL * 1.3f;
@@ -105,7 +98,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Plains:
-		Generators::perlinFractal<2.0f, 2, 2.5f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 2.0f, 2, 2.5f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.25f + WATER_LEVEL * 1.07f;
@@ -113,7 +106,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Forest:
-		Generators::perlinFractal<0.6f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 0.6f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.4f + WATER_LEVEL * 1.2f;
@@ -121,7 +114,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Redwoodforest:
-		Generators::perlinFractal<0.7f, 4, 1.8f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.008f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 0.7f, 4, 1.8f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.008f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.8f + WATER_LEVEL * 1.15f;
@@ -129,7 +122,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Savanna:
-		Generators::perlinFractal<2.0f, 2, 2.3f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 2.0f, 2, 2.3f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.01f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.15f + WATER_LEVEL * 1.1f;
@@ -137,7 +130,7 @@ void TerrainGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WI
 
 
 	case BiomeN::Desert:
-		Generators::perlinFractal<2.3f, 3, 3.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.001f, 123456);
+		Generators::fractalBM<FastNoise::Perlin, 2.3f, 3, 3.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.001f, 123456);
 
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.6f + WATER_LEVEL * 1.25f;
@@ -218,19 +211,29 @@ void TerrainGen::get_height()
 // generate terrain caves
 void TerrainGen::generate_caves()
 {
-	const float scale = 0.005f;
-	const float max = 0.2f;
+	constexpr float scale = 0.005f;
+	constexpr float max = 0.2f;
 	std::array<float, CHUNK_BLOCKNUM> cavesNoise{};
 
-	BlkCrd maxHeight = *std::max_element(heightArr.begin(), heightArr.end()) + 2;
+	BlkCrd maxHeight = std::min(*std::max_element(heightArr.begin(), heightArr.end()) + 2, CHUNK_HEIGHT) * 3/4;
 
-	Generators::simplexFractal<0.7f, 3, 2.0f>()->GenUniformGrid2D(cavesNoise.data(), Xpos * CHUNK_WIDTH, 0, CHUNK_WIDTH, maxHeight, scale, 123456);
+	Generators::fractalBM<FastNoise::Simplex, 0.7f, 3, 2.0f>()->GenUniformGrid2D(cavesNoise.data(), Xpos * CHUNK_WIDTH, 0, CHUNK_WIDTH, maxHeight, scale, 123456);
 
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 	{
-		for (BlkCrd y = 0; y <= heightAtGet(x); ++y)
+		/*
+		BlkCrd Ymax = heightAtGet(x);
+		for (BlkCrd y = 0; y <= Ymax; ++y)
 		{
-			float val = std::fabs(cavesNoise[y * CHUNK_WIDTH + x]) - std::clamp(std::min(y * 0.05f, (heightAtGet(x) - y) * 0.05f + 0.1f), 0.0f, max);
+//			const float val = std::fabs(cavesNoise[y * CHUNK_WIDTH + x]) - std::clamp(std::min(y * 0.05f, (Ymax - y) * 0.05f + 0.1f), 0.0f, max);
+			const float val = std::fabs(cavesNoise[y * CHUNK_WIDTH + x]) - std::clamp(y * 0.05f + 0.1f, 0.0f, max);
+			caves[y * CHUNK_WIDTH + x] = val < scale * 4 - max;
+		}
+		*/
+		for (BlkCrd y = 0; y < maxHeight; ++y)
+		{
+			//			const float val = std::fabs(cavesNoise[y * CHUNK_WIDTH + x]) - std::clamp(std::min(y * 0.05f, (Ymax - y) * 0.05f + 0.1f), 0.0f, max);
+			const float val = std::fabs(cavesNoise[y * CHUNK_WIDTH + x]) - std::clamp(y * 0.05f + 0.1f, 0.0f, max);
 			caves[y * CHUNK_WIDTH + x] = val < scale * 4 - max;
 		}
 	}
@@ -435,7 +438,7 @@ void TerrainGen::surface_layers() const
 void TerrainGen::add_structures() const
 {
 	std::array<float, STRUCTURE_WIDTH> strctrsChance{};
-	generators.strctr->GenUniformGrid2D(strctrsChance.data(), Xpos * CHUNK_WIDTH - STRUCTURE_OUT_RDS, 0, STRUCTURE_WIDTH, 1, 1.0f, 123456);
+	Generators::white01()->GenUniformGrid2D(strctrsChance.data(), Xpos * CHUNK_WIDTH - STRUCTURE_OUT_RDS, 0, STRUCTURE_WIDTH, 1, 1.0f, 123456);
 
 	for (BlkCrd x = -STRUCTURE_OUT_RDS; x < CHUNK_WIDTH + STRUCTURE_OUT_RDS; ++x)
 	{
@@ -503,7 +506,7 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Igloo:
 		if (true) // just for variable space, always true
 		{
-			float rnd = generators.rand->GenSingle2D(Xttl, 1, 123456);
+			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
 			int side = int(rnd * 4) % 4;
 			
@@ -559,7 +562,7 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Cactoo:
 		if (Ymax >= WATER_LEVEL)
 		{
-			float rnd = generators.rand->GenSingle2D(Xttl, 1, 123456);
+			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
 			int height = rnd * 3 + 1;
 			for (int i = 1; i <= height; ++i)
@@ -577,7 +580,7 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Spruce:
 		if (Ymax >= WATER_LEVEL)
 		{
-			float rnd = generators.rand->GenSingle2D(Xttl, 1, 123456);
+			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
 			int height = rnd * 10 + 5;
 			int radius = rnd * 4 + 1;
@@ -601,9 +604,9 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Oak:
 		if (Ymax >= WATER_LEVEL)
 		{
-			float rnd1 = generators.rand->GenSingle2D(Xttl, 1, 123456);
-			float rnd2 = generators.rand->GenSingle2D(Xttl, 2, 123456);
-			float rnd3 = generators.rand->GenSingle2D(Xttl, 3, 123456);
+			float rnd1 = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = Generators::white01()->GenSingle2D(Xttl, 2, 123456);
+			float rnd3 = Generators::white01()->GenSingle2D(Xttl, 3, 123456);
 
 			int height = rnd1 * 10 + 5;
 			int branches = rnd1 * 5;
@@ -640,8 +643,8 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Accacia:
 		if (Ymax >= WATER_LEVEL)
 		{
-			float rnd1 = generators.rand->GenSingle2D(Xttl, 1, 123456);
-			float rnd2 = generators.rand->GenSingle2D(Xttl, 2, 123456);
+			float rnd1 = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = Generators::white01()->GenSingle2D(Xttl, 2, 123456);
 
 			int height = rnd1 * 7 + 5;
 			int offset = (rnd2 * 2 - 1) * 4 * (rnd1 + 1);
@@ -664,7 +667,7 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Redwood:
 		if (Ymax >= WATER_LEVEL)
 		{
-			float rnd = generators.rand->GenSingle2D(Xttl, 1, 123456);
+			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
 			int height = rnd * 15 + 20;
 			int lvsw = rnd * 3 + 2;
@@ -695,10 +698,10 @@ inline void TerrainGen::generate_structure(StrctrN strctr, BlkCrd x) const
 	case StrctrN::Coral:
 		if (Ymax <= WATER_LEVEL - 5)
 		{
-			float rnd1 = generators.rand->GenSingle2D(Xttl, 1, 123456);
-			float rnd2 = generators.rand->GenSingle2D(Xttl, 2, 123456);
-			float rnd3 = generators.rand->GenSingle2D(Xttl, 3, 123456);
-			float rnd4 = generators.rand->GenSingle2D(Xttl, 4, 123456);
+			float rnd1 = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
+			float rnd2 = Generators::white01()->GenSingle2D(Xttl, 2, 123456);
+			float rnd3 = Generators::white01()->GenSingle2D(Xttl, 3, 123456);
+			float rnd4 = Generators::white01()->GenSingle2D(Xttl, 4, 123456);
 
 			int height = rnd1 * 10 + 3;
 			int branches = (rnd1 * 0.5f + 0.5f) * 7 * (rnd2 * 0.6f + 0.4f);
@@ -750,37 +753,6 @@ void TerrainGen::debug_color_biomes() const
 }
 
 
-
-inline constexpr       Block& TerrainGen::blockAtSet(BlkCrd y, BlkCrd x) const
-{
-	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
-		return dataRef[y * CHUNK_WIDTH + x];
-	return BlNullRefSet;
-}
-
-inline constexpr const Block& TerrainGen::blockAtGet(BlkCrd y, BlkCrd x) const
-{
-	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
-		return dataRef[y * CHUNK_WIDTH + x];
-	return BlNullRefGet;
-}
-
-inline constexpr const BiomeN& TerrainGen::biomeAtGet(BlkCrd x) const
-{
-	size_t i = x + BIOME_OFFSET;
-	if (i < BIOME_WIDTH)
-		return biomeArr[i];
-	return BmNullRefGet;
-}
-
-inline constexpr const BlkCrd& TerrainGen::heightAtGet(BlkCrd x) const
-{
-	size_t i = x + TERRAIN_OFFSET;
-	if (i < TERRAIN_WIDTH)
-		return heightArr[i];
-	return HtNullRefGet;
-}
-
 // public method to generate the chunk
 void TerrainGen::generate_chunk()
 {
@@ -812,6 +784,39 @@ void TerrainGen::generate_chunk()
 	debug_color_biomes();
 #endif
 }
+
+
+// getters and setters with proper array offsets (convert Block Pos to array index)
+inline       Block& TerrainGen::blockAtSet(BlkCrd y, BlkCrd x) const
+{
+	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
+		return dataRef[y * CHUNK_WIDTH + x];
+	return BlNullRefSet;
+}
+
+inline const Block& TerrainGen::blockAtGet(BlkCrd y, BlkCrd x) const
+{
+	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
+		return dataRef[y * CHUNK_WIDTH + x];
+	return BlNullRefGet;
+}
+
+inline const BiomeN& TerrainGen::biomeAtGet(BlkCrd x) const
+{
+	size_t i = x + BIOME_OFFSET;
+	if (i < BIOME_WIDTH)
+		return biomeArr[i];
+	return BmNullRefGet;
+}
+
+inline const BlkCrd& TerrainGen::heightAtGet(BlkCrd x) const
+{
+	size_t i = x + TERRAIN_OFFSET;
+	if (i < TERRAIN_WIDTH)
+		return heightArr[i];
+	return HtNullRefGet;
+}
+
 
 // static constexpr return biome ID to biome name string
 constexpr std::string TerrainGen::biome_to_name(BiomeN biome)

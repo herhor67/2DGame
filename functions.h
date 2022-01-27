@@ -85,7 +85,7 @@ constexpr N median(std::array<N, L> values)
 template<float u, float o>
 constexpr float gauss_cdf(float x)
 {
-	return 0.5f * (1.0f + gcem::erf((x - u) / (o * GCEM_SQRT_2)));
+	return 0.5f * (1.0f + gcem::erf((x - u) / (o * (float)GCEM_SQRT_2)));
 }
 
 template<int u, float o>
@@ -98,6 +98,6 @@ constexpr float gauss_pdf_dscrt(int x)
 template <typename Floating, std::enable_if_t<std::is_floating_point<Floating>::value, bool> = true>
 constexpr Floating nextafter(Floating x)
 {
-	return x / (Floating(1) - std::numeric_limits<Floating>::epsilon());
+	return x / (Floating(1) - gcem::sqrt(std::numeric_limits<Floating>::epsilon()));
 }
 
