@@ -2,12 +2,9 @@
 // LIBRARY SETTINGS
 #define NOMINMAX 1
 #define _USE_MATH_DEFINES 1
-
-#define GLUT_DISABLE_ATEXIT_HACK
-#define GLUT_API_VERSION 4
-
 #define FASTNOISE_STATIC_LIB 1
-
+#define GLUT_DISABLE_ATEXIT_HACK
+//#define GLUT_API_VERSION 4
 
 
 
@@ -122,4 +119,3 @@ static constexpr float ENV_GRAVITY = -9.81f;
 #include <iostream>
 
 #define DEBUG_COLOR_BIOMES 0
-#define DEBUG_RENDER_ARRAYS 1

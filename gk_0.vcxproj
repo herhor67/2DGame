@@ -21,7 +21,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="TerrainGen.cpp" />
+    <ClCompile Include="ChunkGen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block.h" />
@@ -34,7 +34,7 @@
     <ClInclude Include="Filesystem.h" />
     <ClInclude Include="functions.h" />
     <ClInclude Include="StaticGenerators.h" />
-    <ClInclude Include="TerrainGen.h" />
+    <ClInclude Include="ChunkGen.h" />
     <ClInclude Include="TimeDiff.h" />
   </ItemGroup>
   <ItemGroup>

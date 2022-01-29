@@ -67,6 +67,7 @@ inline constexpr Integer remap01_dsc(Integer ostart, Integer ostop, float value)
 	return std::clamp(ostart + Integer((ostop - ostart + 1) * value), ostart, ostop);
 }
 
+
 template <typename N, size_t L>
 constexpr N median(std::array<N, L> values)
 {
@@ -82,16 +83,14 @@ constexpr N median(std::array<N, L> values)
 }
 
 
-template<float u, float o>
-constexpr float gauss_cdf(float x)
+inline constexpr float gauss_cdf(float x, float u, float o)
 {
 	return 0.5f * (1.0f + gcem::erf((x - u) / (o * (float)GCEM_SQRT_2)));
 }
 
-template<int u, float o>
-constexpr float gauss_pdf_dscrt(int x)
+inline constexpr float gauss_pdf_dscrt(int x, int u, float o)
 {
-	return gauss_cdf<float(u), o>(x + 0.5f) - gauss_cdf<float(u), o>(x - 0.5f);
+	return gauss_cdf(x + 0.5f, float(u), o) - gauss_cdf(x - 0.5f, float(u), o);
 }
 
 

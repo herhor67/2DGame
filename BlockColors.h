@@ -3,6 +3,10 @@
 
 #include "Block.h"
 
+
+
+
+
 #if DEBUG_COLOR_BIOMES
 static constexpr float blockColorsFloat[] = {
 	0.0f,	0.0f,	0.0f,	0.1f,	//	air

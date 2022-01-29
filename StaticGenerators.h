@@ -85,7 +85,7 @@ namespace Generators
 	/*
 	
 	template <float G = 0.5f, int O = 3, float L = 2.0f, typename T, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
-	static const auto& fractalBM(const SmartNode<T>& S)
+	static const auto& fractalB(const SmartNode<T>& S)
 	{
 		static const auto& generatorRef = [&]()
 		{
@@ -104,7 +104,7 @@ namespace Generators
 	*/
 
 	template <typename T, float G = 0.5f, int O = 3, float L = 2.0f, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
-	static const auto& fractalBM()
+	static const auto& fractalB()
 	{
 		static const auto& generatorRef = [&]()
 		{
@@ -122,7 +122,7 @@ namespace Generators
 	}
 
 	template <typename T, float G = 0.5f, int O = 3, float L = 2.0f, std::enable_if_t<std::is_base_of<Generator, T>::value, bool> = true>
-	static const auto& fractalDR()
+	static const auto& fractalR()
 	{
 		static const auto& generatorRef = [&]()
 		{

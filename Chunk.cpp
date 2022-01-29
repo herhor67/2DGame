@@ -5,18 +5,8 @@
 #include <iostream>
 #include "Filesystem.h"
 
-#include "TerrainGen.h"
+#include "ChunkGen.h"
 
-
-#if DEBUG_RENDER_ARRAYS
-static constexpr auto pointsArr = generate_vertices<>();
-static constexpr auto pointsPtr = pointsArr.data();
-static constexpr auto facesArr = generate_faces<>();
-static constexpr auto facesPtr = facesArr.data();
-#endif
-#if CLR_NO_FLOAT
-static constexpr auto colorsArr = generate_colors<ClrT>();
-#endif
 
 
 Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
@@ -63,7 +53,7 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 		std::cout << "Chunk:: file " << _Xpos << " doesnt exist" << std::endl;
 #endif
 		
-		TerrainGen generator(Xpos, blocks);
+		ChunkGen generator(Xpos, blocks);
 
 		generator.generate_chunk();
 
@@ -113,8 +103,6 @@ void setColor(Bl_t block)
 		break;
 	}
 }
-
-#if DEBUG_RENDER_ARRAYS
 
 void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 {
@@ -167,8 +155,8 @@ void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
 	}
-
 #endif
+
 #if DRAW_BORDERS
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -184,73 +172,6 @@ void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 #endif
 //	glPopMatrix();                      // Restore the model-view matrix
 }
-
-#else
-
-void Chunk::draw() const
-{
-	glMatrixMode(GL_MODELVIEW);     // To operate on Model-View matrix
-	glLoadIdentity();               // Reset the model-view matrix
-
-	glPushMatrix();                     // Save model-view matrix setting
-	glTranslatef(Xpos * CHUNK_WIDTH, 0.0f, Z_VAL_TERRAIN);    // Translate
-
-#if DRAW_FACES
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBegin(GL_QUADS);                  // Each set of 4 vertices form a quad
-
-		BlkCrd yBcrd = 0;
-		BlkCrd xBcrd = 0;
-		for (Block block : blocks)
-		{
-			if (block.ID != 0)
-			{
-				setColor(block.ID);
-
-				glVertex2f(xBcrd, yBcrd);
-				glVertex2f(xBcrd + 1, yBcrd);
-				glVertex2f(xBcrd + 1, yBcrd + 1);
-				glVertex2f(xBcrd, yBcrd + 1);
-			}
-
-			if (++xBcrd == CHUNK_WIDTH)
-			{
-				xBcrd = 0;
-				++yBcrd;
-			}
-		}
-		glEnd();
-	}
-#endif
-#if DRAW_BORDERS
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glBegin(GL_QUADS);                  // Each set of 4 vertices form a quad
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		size_t yBcrd = 0;
-		size_t xBcrd = 0;
-		for (Block block : blocks)
-		{
-			glVertex2f(xBcrd, yBcrd);
-			glVertex2f(xBcrd + 1, yBcrd);
-			glVertex2f(xBcrd + 1, yBcrd + 1);
-			glVertex2f(xBcrd, yBcrd + 1);
-
-			if (++xBcrd == CHUNK_WIDTH)
-			{
-				xBcrd = 0;
-				++yBcrd;
-			}
-		}
-		glEnd();
-	}
-#endif
-	glPopMatrix();                      // Restore the model-view matrix
-}
-
-#endif
-
 
 std::string Chunk::getPath() const
 {

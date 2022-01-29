@@ -17,36 +17,40 @@
 enum class BiomeN : uint32_t { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
 typedef std::underlying_type_t<BiomeN> Bm_t;
 
-enum class StrctrN : uint32_t { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Accacia, Redwood, Igloo, Coral, MAX };
+enum class StrctrN : uint32_t { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Acacia, Redwood, Igloo, Coral, MAX };
 typedef std::underlying_type_t<StrctrN> St_t;
 
-template<size_t L = BIOME_ITPL_RDS>
-constexpr auto generate_gauss_interpolation()
+
+
+#if HEIGHT_ITPL_GAUSS
+static constexpr std::array<float, BIOME_ITPL_RDS + 1> generate_biome_weights()
 {
 	constexpr float sigmas = 2.5f;
-	constexpr float std = (L ? L : 1) / sigmas;
-	constexpr float DCoffset = gauss_pdf_dscrt<L, std>(-2); // -1?
+	constexpr float std = (BIOME_ITPL_RDS ? BIOME_ITPL_RDS : 1) / sigmas;
+	constexpr float DCoffset = gauss_pdf_dscrt(-2, BIOME_ITPL_RDS, std); // -1?
 
-	std::array<float, L+1> multipliers{ };
+	std::array<float, BIOME_ITPL_RDS + 1> multipliers{ };
 
 	size_t i = 0;
 	float sum = 0.0f;
-	for (size_t i = 0; i < L; ++i)
+	for (size_t i = 0; i < BIOME_ITPL_RDS; ++i)
 	{
-		multipliers[i] = gauss_pdf_dscrt<L, std>(i) - DCoffset;
+		multipliers[i] = gauss_pdf_dscrt(i, BIOME_ITPL_RDS, std) - DCoffset;
 		sum += 2 * multipliers[i];
 	}
-	multipliers[L] = gauss_pdf_dscrt<L, std>(L) - DCoffset;
-	sum += multipliers[L];
+	multipliers[BIOME_ITPL_RDS] = gauss_pdf_dscrt(BIOME_ITPL_RDS, BIOME_ITPL_RDS, std) - DCoffset;
+	sum += multipliers[BIOME_ITPL_RDS];
 
-	for (size_t i = 0; i <= L; ++i)
+	for (size_t i = 0; i <= BIOME_ITPL_RDS; ++i)
 		multipliers[i] /= sum;
 
 	return multipliers;
 }
+#endif
 
 
-class TerrainGen
+
+class ChunkGen
 {
 	ChkCrd Xpos = INT_MIN;
 	std::array<Block, CHUNK_BLOCKNUM>& dataRef;
@@ -63,7 +67,7 @@ class TerrainGen
 	static const BlkCrd HtNullRefGet;
 
 #if HEIGHT_ITPL_GAUSS
-	static constexpr std::array<float, BIOME_ITPL_RDS + 1> itpl_coeffs = generate_gauss_interpolation();
+	static constexpr auto itpl_coeffs = generate_biome_weights();
 #endif
 
 	inline void get_biomes();
@@ -85,12 +89,13 @@ class TerrainGen
 	inline const BiomeN& biomeAtGet(BlkCrd) const;
 	inline const BlkCrd& heightAtGet(BlkCrd) const;
 
-
 public:
-	TerrainGen(ChkCrd, std::array<Block, CHUNK_BLOCKNUM>&);
-	~TerrainGen();
+	ChunkGen(ChkCrd, std::array<Block, CHUNK_BLOCKNUM>&);
+	~ChunkGen();
 
 	void generate_chunk();
 
 	static constexpr std::string biome_to_name(BiomeN);
 };
+
+
