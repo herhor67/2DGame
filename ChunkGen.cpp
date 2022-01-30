@@ -6,13 +6,13 @@
 
 
 
-      Block  ChunkGen::BlNullRefSet = BlockN::MAX;
-const Block  ChunkGen::BlNullRefGet = BlockN::MAX;
+      BlockN  ChunkGen::BlNullRefSet = BlockN::MAX;
+const BlockN  ChunkGen::BlNullRefGet = BlockN::MAX;
 const BiomeN ChunkGen::BmNullRefGet = BiomeN::MIN;
 const BlkCrd ChunkGen::HtNullRefGet = INT_MIN;
 
 
-ChunkGen::ChunkGen(ChkCrd _Xpos, std::array<Block, CHUNK_BLOCKNUM>& _dataRef) : Xpos(_Xpos), dataRef(_dataRef) { }
+ChunkGen::ChunkGen(ChkCrd _Xpos, std::array<BlockN, CHUNK_BLOCKNUM>& _dataRef) : Xpos(_Xpos), dataRef(_dataRef) { }
 
 ChunkGen::~ChunkGen() { }
 
@@ -27,7 +27,7 @@ inline void ChunkGen::get_biomes()
 	{
 		float value = biomeNoise[i] * 0.5f + 0.5f;
 
-		BiomeN biome = BiomeN(remap01_dsc(Bm_t(BiomeN::MIN) + 1, Bm_t(BiomeN::MAX) - 1, value));
+		BiomeN biome = BiomeN(remap01_dsc(static_cast<Bm_t>(BiomeN::MIN) + 1, static_cast<Bm_t>(BiomeN::MAX) - 1, value));
 
 //		biome = BiomeN::Mountains;
 
@@ -47,15 +47,12 @@ inline void ChunkGen::get_biomes()
 // calculate heights per coordinate for given biome
 inline void ChunkGen::get_height_for_biome(BiomeN biome, std::array<float, TERRAIN_WIDTH>& ptr)
 {
-//	for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
-//		ptr[i] = WATER_LEVEL + (Bm_t(biome) - 3) * 5;
-//	return;
-	
 	BlkCrd Xmin = Xpos * CHUNK_WIDTH - TERRAIN_OFFSET;
 	std::array<float, TERRAIN_WIDTH> heightNoise{};
 
 	switch (biome)
 	{
+#if !DEBUG_CONST_HEIGHT
 	case BiomeN::Polar:
 		Generators::fractalB<FastNoise::Perlin, 0.5f, 3, 2.0f>()->GenUniformGrid2D(heightNoise.data(), Xmin, 0, TERRAIN_WIDTH, 1, 0.005f, 123456);
 
@@ -134,7 +131,7 @@ inline void ChunkGen::get_height_for_biome(BiomeN biome, std::array<float, TERRA
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
 			ptr[i] = heightNoise[i] * WATER_LEVEL * 0.6f + WATER_LEVEL * 1.25f;
 		break;
-
+#endif
 
 	default:
 		for (BlkCrd i = 0; i < TERRAIN_WIDTH; ++i)
@@ -207,7 +204,7 @@ inline void ChunkGen::get_height()
 }
 #endif
 
-
+#pragma warning(disable:6262)
 // generate terrain caves
 inline void ChunkGen::generate_caves()
 {
@@ -248,7 +245,7 @@ inline void ChunkGen::fill_with_fluids() const
 		BlkCrd Ymax = heightAtGet(x);
 		if (Ymax <= WATER_LEVEL)
 			for (BlkCrd y = WATER_LEVEL; y > Ymax; --y)
-				if (blockAtGet(y, x).ID == BlockN::air)
+				if (blockAtGet(y, x) == BlockN::air)
 					blockAtSet(y, x) = BlockN::water;
 				else
 					break;
@@ -256,7 +253,7 @@ inline void ChunkGen::fill_with_fluids() const
 	
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 		for (BlkCrd y = 0; y <= LAVA_LEVEL; ++y)
-			if (blockAtGet(y, x).ID == BlockN::air)
+			if (blockAtGet(y, x) == BlockN::air)
 				blockAtSet(y, x) = BlockN::lava;
 }
 
@@ -305,7 +302,7 @@ inline void ChunkGen::surface_layers() const
 			{
 				for (size_t i = 0; i <= 3; ++i)
 				{
-					if (++Yt < CHUNK_HEIGHT * (i + 1) / (i + 2))
+					if (++Yt < static_cast<BlkCrd>(CHUNK_HEIGHT * (i + 1) / (i + 2)))
 						break;
 					blockAtSet(Yt, x) = BlockN::snow;
 				}
@@ -420,7 +417,7 @@ inline void ChunkGen::surface_layers() const
 }
 
 
-// generate vegetation
+// find places for structures
 inline void ChunkGen::add_structures() const
 {
 	std::array<float, STRUCTURE_WIDTH> strctrsChance{};
@@ -479,7 +476,7 @@ inline void ChunkGen::add_structures() const
 }
 
 
-// generate plants
+// generate structure at given place
 inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 {
 	BlkCrd Xttl = Xpos * CHUNK_WIDTH + x;
@@ -504,23 +501,23 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			Ymax = median(heights);
 
 			for (BlkCrd i = 2; i >= heights[0] - Ymax; --i)
-				if (blockAtGet(Ymax + i, x - 2).ID == BlockN::air)
+				if (blockAtGet(Ymax + i, x - 2) == BlockN::air)
 					blockAtSet(Ymax + i, x - 2) = (i > 0) ? BlockN::ice : BlockN::snow;
 
 			for (BlkCrd i = 3; i >= heights[1] - Ymax; --i)
-				if (blockAtGet(Ymax + i, x - 1).ID == BlockN::air)
+				if (blockAtGet(Ymax + i, x - 1) == BlockN::air)
 					blockAtSet(Ymax + i, x - 1) = (i > 0) ? BlockN::ice : BlockN::snow;
 
 			for (BlkCrd i = 3; i >= heights[2] - Ymax; --i)
-				if (blockAtGet(Ymax + i, x).ID == BlockN::air)
+				if (blockAtGet(Ymax + i, x) == BlockN::air)
 					blockAtSet(Ymax + i, x + 0) = (i > 0) ? BlockN::ice : BlockN::snow;
 
 			for (BlkCrd i = 3; i >= heights[3] - Ymax; --i)
-				if (blockAtGet(Ymax + i, x + 1).ID == BlockN::air)
+				if (blockAtGet(Ymax + i, x + 1) == BlockN::air)
 					blockAtSet(Ymax + i, x + 1) = (i > 0) ? BlockN::ice : BlockN::snow;
 
 			for (BlkCrd i = 2; i >= heights[4] - Ymax; --i)
-				if (blockAtGet(Ymax + i, x + 2).ID == BlockN::air)
+				if (blockAtGet(Ymax + i, x + 2) == BlockN::air)
 					blockAtSet(Ymax + i, x + 2) = (i > 0) ? BlockN::ice : BlockN::snow;
 			
 			if (side == 0)
@@ -530,16 +527,16 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			}
 			if (side == 1)
 			{
-				if (blockAtGet(Ymax + 1, x + 3).ID == BlockN::air)
+				if (blockAtGet(Ymax + 1, x + 3) == BlockN::air)
 					blockAtSet(Ymax + 1, x + 3) = BlockN::ice;
-				if (blockAtGet(Ymax + 2, x + 3).ID == BlockN::air)
+				if (blockAtGet(Ymax + 2, x + 3) == BlockN::air)
 					blockAtSet(Ymax + 2, x + 3) = BlockN::ice;
 			}
 			if (side == 2)
 			{
-				if (blockAtGet(Ymax + 1, x - 3).ID == BlockN::air)
+				if (blockAtGet(Ymax + 1, x - 3) == BlockN::air)
 					blockAtSet(Ymax + 1, x - 3) = BlockN::ice;
-				if (blockAtGet(Ymax + 2, x - 3).ID == BlockN::air)
+				if (blockAtGet(Ymax + 2, x - 3) == BlockN::air)
 					blockAtSet(Ymax + 2, x - 3) = BlockN::ice;
 			}
 		}
@@ -579,9 +576,9 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 				if (i > (height + 9) / 10)
 					for (int j = 0; j <= remap(height / 6, height, radius, 0, i); ++j)
 					{
-						if (blockAtGet(Ymax + i, x + j).ID == BlockN::air)
+						if (blockAtGet(Ymax + i, x + j) == BlockN::air)
 							blockAtSet(Ymax + i, x + j) = BlockN::spruceleaves;
-						if (blockAtGet(Ymax + i, x - j).ID == BlockN::air)
+						if (blockAtGet(Ymax + i, x - j) == BlockN::air)
 							blockAtSet(Ymax + i, x - j) = BlockN::spruceleaves;
 					}
 		}
@@ -613,7 +610,7 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 				for (int i = 1; i <= height / (j + 1); ++i)
 				{
 					BlkCrd y = Ymax + height * num / den + 1 + remap(0, height / (j + 1), 0, std::max(1, height / (j + 4)), i);
-//					if (blockAtGet(y, x + side * i).ID == BlockN::air)
+//					if (blockAtGet(y, x + side * i) == BlockN::air)
 						blockAtSet(y, x + side * i) = BlockN::oakwood;
 				}
 			}
@@ -621,7 +618,7 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			for (int i = -height / 2; i <= height / 2; ++i)
 				for (int j = -height * 3 / 5; j <= height * 3 / 5; ++j)
 					if (orient && j * j / 4 + i * i * 4 / 9 <= height * height / 9 || !orient && i * i / 4 + j * j * 4 / 9 <= height * height / 9)
-						if (blockAtGet(Ymax + i + height * 2 / 3 + 1, x + j).ID == BlockN::air)
+						if (blockAtGet(Ymax + i + height * 2 / 3 + 1, x + j) == BlockN::air)
 							blockAtSet(Ymax + i + height * 2 / 3 + 1, x + j) = BlockN::oakleaves;
 		}
 		break;
@@ -642,9 +639,9 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			for (int i = height * 5 / 6; i <= height * 6 / 5; ++i)
 				for (int j = 0; j <= std::min(remap(height * 5 / 6, height, 2, height / 2, i), remap(height, height * 6 / 5, height / 2, 2, i)); ++j)
 				{
-					if (blockAtGet(Ymax + i, x + offset + j).ID == BlockN::air)
+					if (blockAtGet(Ymax + i, x + offset + j) == BlockN::air)
 						blockAtSet(Ymax + i, x + offset + j) = BlockN::acacialeaves;
-					if (blockAtGet(Ymax + i, x + offset - j).ID == BlockN::air)
+					if (blockAtGet(Ymax + i, x + offset - j) == BlockN::air)
 						blockAtSet(Ymax + i, x + offset - j) = BlockN::acacialeaves;
 				}
 		}
@@ -673,10 +670,10 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			for (int i = height * 2 / 6 - 2; i <= height + 2; ++i)
 				for (int j = 0; j <= std::min(std::min(remap(height *2/6 - 3, height * 2 / 6 +2, 0, lvsw, i), remap(height + 3, height*3/5, 0, lvsw, i)), lvsw); ++j)
 				{
-					if (blockAtGet(Ymax + i, x + j).ID == BlockN::air)
-						blockAtSet(Ymax + i, x + j) = BlockN::redleaves;
-					if (blockAtGet(Ymax + i, x - j).ID == BlockN::air)
-						blockAtSet(Ymax + i, x - j) = BlockN::redleaves;
+					if (blockAtGet(Ymax + i, x + j) == BlockN::air)
+						blockAtSet(Ymax + i, x + j) = BlockN::redwleaves;
+					if (blockAtGet(Ymax + i, x - j) == BlockN::air)
+						blockAtSet(Ymax + i, x - j) = BlockN::redwleaves;
 				}
 		}
 		break;
@@ -693,10 +690,10 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			int height = rnd1 * 10 + 3;
 			int branches = (rnd1 * 0.5f + 0.5f) * 7 * (rnd2 * 0.6f + 0.4f);
 			int side = (rnd3 > 0.5f) ? 1 : -1;
-			BlockN color = (BlockN)remap01_dsc(Bl_t(BlockN::redcoral), Bl_t(BlockN::bluecoral), rnd4);
+			BlockN color = static_cast<BlockN>(remap01_dsc(static_cast<Bl_t>(BlockN::redcoral), static_cast<Bl_t>(BlockN::bluecoral), rnd4));
 
 			for (int i = 1; i <= height; ++i)
-				if (blockAtGet(Ymax + i, x).ID == BlockN::water)
+				if (blockAtGet(Ymax + i, x) == BlockN::water)
 					blockAtSet(Ymax + i, x) = color;
 
 			int num = 0;
@@ -709,7 +706,7 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 				for (int i = 1; i <= height / (j + 1); ++i)
 				{
 					BlkCrd y = Ymax + height * num / den + 1 + remap(0, height / (j + 1), 0, std::max(1, height / (j + 4)), i);
-					if (blockAtGet(y, x + side * i).ID == BlockN::water)
+					if (blockAtGet(y, x + side * i) == BlockN::water)
 						blockAtSet(y, x + side * i) = color;
 				}
 			}
@@ -734,10 +731,10 @@ inline void ChunkGen::debug_color_biomes() const
 {
 	for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
-			if (blockAtGet(y, x).ID == BlockN::water || blockAtGet(y, x).ID == BlockN::lava)
-				blockAtSet(y, x) = Block(16);
-			else if (blockAtGet(y, x).ID != BlockN::air)
-				blockAtSet(y, x) = Block(Bm_t(biomeAtGet(x)));
+			if (blockAtGet(y, x) == BlockN::water || blockAtGet(y, x) == BlockN::lava)
+				blockAtSet(y, x) = BlockN(16);
+			else if (blockAtGet(y, x) != BlockN::air)
+				blockAtSet(y, x) = BlockN(Bm_t(biomeAtGet(x)));
 }
 
 
@@ -763,8 +760,9 @@ void ChunkGen::generate_chunk()
 	surface_layers();
 
 	// must be after biomes, height, stone and surface
+#if !DEBUG_NO_STRCTRS
 	add_structures();
-
+#endif
 
 	// must be at the very end
 	protect_bedrock();
@@ -776,15 +774,15 @@ void ChunkGen::generate_chunk()
 
 
 
-// getters and setters with proper array offsets (convert Block Pos to array index)
-inline       Block& ChunkGen::blockAtSet(BlkCrd y, BlkCrd x) const
+// getters and setters with proper array offsets (convert BlockN Pos to array index)
+inline       BlockN& ChunkGen::blockAtSet(BlkCrd y, BlkCrd x) const
 {
 	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
 		return dataRef[y * CHUNK_WIDTH + x];
 	return BlNullRefSet;
 }
 
-inline const Block& ChunkGen::blockAtGet(BlkCrd y, BlkCrd x) const
+inline const BlockN& ChunkGen::blockAtGet(BlkCrd y, BlkCrd x) const
 {
 	if ((size_t)x < CHUNK_WIDTH && (size_t)y < CHUNK_HEIGHT)
 		return dataRef[y * CHUNK_WIDTH + x];

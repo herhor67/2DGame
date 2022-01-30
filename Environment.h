@@ -47,14 +47,14 @@ struct Pos
 		temp -= obj;
 		return temp;
 	}
-	template<typename N, typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type>
+	template<typename N, std::enable_if_t<std::is_arithmetic<N>::value, bool> = true>
 	Pos operator*(N const& k) const
 	{
 		Pos temp(*this);
 		temp *= k;
 		return temp;
 	}
-	template<typename N, typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type>
+	template<typename N, std::enable_if_t<std::is_arithmetic<N>::value, bool> = true>
 	Pos operator/(N const& k) const
 	{
 		Pos temp(*this);

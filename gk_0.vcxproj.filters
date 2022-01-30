@@ -24,13 +24,7 @@
     <ClCompile Include="Chunk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Block.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Entity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChunkGen.cpp">
@@ -68,13 +62,13 @@
     <ClInclude Include="ChunkGen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BlockColors.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="StaticGenerators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TimeDiff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLhelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

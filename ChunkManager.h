@@ -27,8 +27,8 @@ public:
 	Chunk& getChunk(ChkCrd);
 	size_t count();
 
-	Block getBlockAt(BlkCrd, BlkCrd);
+	BlockN getBlockAt(BlkCrd, BlkCrd);
 
 	// Pos, BlockX, BlockY, side, ratio
-	std::tuple<Pos, Block, Block, int, EntCrd> checkCollision(const Movement&, const Entity&);
+	std::tuple<Pos, BlockN, BlockN, int, EntCrd> checkCollision(const Movement&, const Entity&);
 };

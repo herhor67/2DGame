@@ -13,14 +13,14 @@
 // TYPEDEFS
 #include <type_traits>
 
-typedef std::make_signed<size_t>::type BlkCrd; // Block Coordinate Type
+typedef std::make_signed<size_t>::type BlkCrd; // BlockN Coordinate Type
 typedef std::make_signed<size_t>::type ChkCrd; // Chunk Coordinate Type
 
 typedef float EntCrd; // Entity Coordinate Type
 
 typedef float TDT; // Time Difference Type
 
-typedef unsigned char ClrT; // color type
+typedef unsigned char uint8_t; // color type
 
 
 
@@ -76,7 +76,8 @@ static constexpr float DEFAULT_ASPECT = 1.77777777f; // 16/9
 #define DRAW_FACES 1
 #define DRAW_BORDERS 0
 #define DOUBLE_BUFFERED 1
-#define CLR_NO_FLOAT 0
+#define CLR_BYTE 1
+#define ADD_TEXT_BG 0
 
 
 // Z-OFFSETS
@@ -108,7 +109,7 @@ static constexpr float ENV_GRAVITY = -9.81f;
 #define DYN_ZOOMOUT 0
 
 
-// DEBUG SETTINGS
+// LOGGING SETTINGS
 #define CONSOLE_LOG_CALLBACKS 0
 #define CONSOLE_LOG_EVENTS 0
 #define CONSOLE_LOG_CHUNKS 0
@@ -116,6 +117,14 @@ static constexpr float ENV_GRAVITY = -9.81f;
 #define CONSOLE_LOG_MOVEMENT 0
 #define CONSOLE_LOG_GENERATORS 1
 
+
+// DEBUG SETTINGS
+#define DEBUG_COLOR_BIOMES 0
+#define DEBUG_CONST_HEIGHT 0
+#define DEBUG_NO_STRCTRS 0
+
+
 #include <iostream>
 
-#define DEBUG_COLOR_BIOMES 0
+#pragma warning(disable:6262) // too much memory on stack, I dont give a Flying Dutchman
+#pragma warning(disable:28020) // param 1 at this call something something bullshit

@@ -75,7 +75,7 @@ size_t ChunkManager::count()
 }
 
 
-Block ChunkManager::getBlockAt(BlkCrd x, BlkCrd y)
+BlockN ChunkManager::getBlockAt(BlkCrd x, BlkCrd y)
 {
 	BlkCrd blXpos = x % CHUNK_WIDTH;
 	if (blXpos < 0)
@@ -88,7 +88,7 @@ Block ChunkManager::getBlockAt(BlkCrd x, BlkCrd y)
 	return getChunk(chXpos).getBlockAt(blXpos, y);
 }
 
-std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Movement& movement, const Entity& entity)
+std::tuple<Pos, BlockN, BlockN, int, EntCrd> ChunkManager::checkCollision(const Movement& movement, const Entity& entity)
 {
 
 	EntCrd dX = movement.second.X - movement.first.X;
@@ -96,8 +96,8 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 	
 	Pos finalPos_X = movement.second;
 	Pos finalPos_Y = movement.second;
-	Block finalBlock_X(0);
-	Block finalBlock_Y(0);
+	BlockN finalBlock_X = BlockN::air;
+	BlockN finalBlock_Y = BlockN::air;
 	int finalSide_X = SIDE_NONE;
 	int finalSide_Y = SIDE_NONE;
 
@@ -139,9 +139,9 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		{
 			for (const BlkCrd& blkX : loopXs)
 			{
-				Block blk = getBlockAt(blkX, blkY);
+				BlockN blk = getBlockAt(blkX, blkY);
 
-				if (blk.ID != 0)
+				if (blk != 0)
 				{
 					const Pos blkPos = { blkX, blkY };
 
@@ -209,9 +209,9 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		{
 			for (const BlkCrd& blkX : loopXs)
 			{
-				Block blk = getBlockAt(blkX, blkY);
+				BlockN blk = getBlockAt(blkX, blkY);
 
-				if (blk.ID != 0)
+				if (blk != 0)
 				{
 					const Pos blkPos = { blkX, blkY };
 
@@ -278,9 +278,9 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		{
 			for (const BlkCrd& blkX : loopXs)
 			{
-				Block blk = getBlockAt(blkX, blkY);
+				BlockN blk = getBlockAt(blkX, blkY);
 
-				if (blk.ID != 0)
+				if (blk != 0)
 				{
 					const Pos blkPos = { blkX, blkY };
 
@@ -347,9 +347,9 @@ std::tuple<Pos, Block, Block, int, EntCrd> ChunkManager::checkCollision(const Mo
 		{
 			for (const BlkCrd& blkX : loopXs)
 			{
-				Block blk = getBlockAt(blkX, blkY);
+				BlockN blk = getBlockAt(blkX, blkY);
 
-				if (blk.ID != 0)
+				if (blk != 0)
 				{
 					const Pos blkPos = { blkX, blkY };
 

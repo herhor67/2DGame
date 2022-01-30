@@ -5,16 +5,11 @@
 
 #include <FastNoise/FastNoise.h>
 
-#include "TimeDiff.h"
-
-
 
 namespace Generators
 {
 	using namespace FastNoise;
 
-	//		auto t1 = std::chrono::steady_clock::now();
-	//		std::cout << &generatorRef << "\t" << duration2readable(t1) << std::endl;
 
 	static const auto& white()
 	{

@@ -11,6 +11,7 @@
 #include "functions.h"
 
 #include "Chunk.h"
+#include "GLhelpers.h"
 #include "StaticGenerators.h"
 
 
@@ -22,38 +23,11 @@ typedef std::underlying_type_t<StrctrN> St_t;
 
 
 
-#if HEIGHT_ITPL_GAUSS
-static constexpr std::array<float, BIOME_ITPL_RDS + 1> generate_biome_weights()
-{
-	constexpr float sigmas = 2.5f;
-	constexpr float std = (BIOME_ITPL_RDS ? BIOME_ITPL_RDS : 1) / sigmas;
-	constexpr float DCoffset = gauss_pdf_dscrt(-2, BIOME_ITPL_RDS, std); // -1?
-
-	std::array<float, BIOME_ITPL_RDS + 1> multipliers{ };
-
-	size_t i = 0;
-	float sum = 0.0f;
-	for (size_t i = 0; i < BIOME_ITPL_RDS; ++i)
-	{
-		multipliers[i] = gauss_pdf_dscrt(i, BIOME_ITPL_RDS, std) - DCoffset;
-		sum += 2 * multipliers[i];
-	}
-	multipliers[BIOME_ITPL_RDS] = gauss_pdf_dscrt(BIOME_ITPL_RDS, BIOME_ITPL_RDS, std) - DCoffset;
-	sum += multipliers[BIOME_ITPL_RDS];
-
-	for (size_t i = 0; i <= BIOME_ITPL_RDS; ++i)
-		multipliers[i] /= sum;
-
-	return multipliers;
-}
-#endif
-
-
 
 class ChunkGen
 {
 	ChkCrd Xpos = INT_MIN;
-	std::array<Block, CHUNK_BLOCKNUM>& dataRef;
+	std::array<BlockN, CHUNK_BLOCKNUM>& dataRef;
 	std::array<BiomeN, BIOME_WIDTH> biomeArr{};
 	std::unordered_set<BiomeN> biomesUnq;
 	std::array<BlkCrd, TERRAIN_WIDTH> heightArr{};
@@ -61,8 +35,8 @@ class ChunkGen
 
 //	const Generators& generators;
 
-	static       Block  BlNullRefSet;
-	static const Block  BlNullRefGet;
+	static       BlockN  BlNullRefSet;
+	static const BlockN  BlNullRefGet;
 	static const BiomeN BmNullRefGet;
 	static const BlkCrd HtNullRefGet;
 
@@ -84,13 +58,13 @@ class ChunkGen
 
 	inline void generate_structure(StrctrN, BlkCrd) const;
 
-	inline Block& blockAtSet(BlkCrd, BlkCrd) const;
-	inline const Block& blockAtGet(BlkCrd, BlkCrd) const;
+	inline BlockN& blockAtSet(BlkCrd, BlkCrd) const;
+	inline const BlockN& blockAtGet(BlkCrd, BlkCrd) const;
 	inline const BiomeN& biomeAtGet(BlkCrd) const;
 	inline const BlkCrd& heightAtGet(BlkCrd) const;
 
 public:
-	ChunkGen(ChkCrd, std::array<Block, CHUNK_BLOCKNUM>&);
+	ChunkGen(ChkCrd, std::array<BlockN, CHUNK_BLOCKNUM>&);
 	~ChunkGen();
 
 	void generate_chunk();

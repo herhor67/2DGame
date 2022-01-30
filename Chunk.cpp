@@ -36,7 +36,7 @@ Chunk::Chunk(ChkCrd _Xpos) : Xpos(_Xpos)
 					blockID <<= 7;
 				else
 				{
-					blocks[pos] = Block(blockID);
+					blocks[pos] = BlockN(blockID);
 					blockID = 0;
 
 					if (++pos == CHUNK_BLOCKNUM)
@@ -69,41 +69,6 @@ Chunk::~Chunk()
 
 
 
-void setColor(Bl_t block)
-{
-	switch (block)
-	{
-	case 1: //stone
-		glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
-		break;
-	case 2: // dirt
-		glColor4f(0.545098f, 0.270588f, 0.0745098f, 1.0f);
-		break;
-	case 3: // grass
-		glColor4f(0.0f, 0.5f, 0.0f, 1.0f);
-		break;
-
-	case 6: // bedrock
-		glColor4f(0.2f, 0.2f, 0.2f, 1.0f);
-		break;
-
-	case 8: // water
-		glColor4f(0.0f, 0.02f, 1.0f, 0.75f);
-		break;
-	case 9: // lava
-		glColor4f(1.0f, 0.2f, 0.2f, 0.75f);
-		break;
-
-	case 10: // sand
-		glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-		break;
-
-	default: // error
-		glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-		break;
-	}
-}
-
 void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -118,33 +83,32 @@ void Chunk::draw(BlkCrd Ymin, BlkCrd Ymax) const
 
 #if DRAW_FACES
 	{
-#if CLR_NO_FLOAT
-		ClrT colors[CHUNK_VERTNUM*4] = {};
+#if CLR_BYTE
+		uint8_t colors[CHUNK_VERTNUM * 4] = {};
 #else
-		GLfloat colors[CHUNK_VERTNUM*4] = {};
+		GLfloat colors[CHUNK_VERTNUM * 4] = {};
 #endif
 		size_t i = (CHUNK_WIDTH + 1) * 4;
 		for (BlkCrd y = 0; y < CHUNK_HEIGHT; ++y)
 		{
 			for (BlkCrd x = 0; x < CHUNK_WIDTH; ++x)
 			{
-#if CLR_NO_FLOAT
-				memcpy(&colors[i], &colorsArr[Bl_t(blocks[y * CHUNK_WIDTH + x].ID) * 4], 4 * sizeof(ClrT));
+#if CLR_BYTE
+				memcpy(&colors[i], &Block::ColorsChr[Bl_t(blocks[y * CHUNK_WIDTH + x])], sizeof(Color<uint8_t>));
 #else
-				memcpy(&colors[i], &blockColorsFloat[Bl_t(blocks[y * CHUNK_WIDTH + x].ID) * 4], 4 * sizeof(GLfloat));
+				memcpy(&colors[i], &Block::ColorsFlt[Bl_t(blocks[y * CHUNK_WIDTH + x])], sizeof(Color<float>));
 #endif
 				i += 4;
 			}
 			i += 4;
 		}
-//		setColor(0);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		glVertexPointer(2, GL_FLOAT, 0, pointsPtr);
-#if CLR_NO_FLOAT
+#if CLR_BYTE
 		glColorPointer(4, GL_UNSIGNED_BYTE, 0, &colors);
 #else
 		glColorPointer(4, GL_FLOAT, 0, &colors);
@@ -181,6 +145,8 @@ std::string Chunk::getPath() const
 
 bool Chunk::save() const
 {
+	constexpr size_t piecesCount = sizeof(Bl_t) * CHAR_BIT;
+
 	std::string path = getPath();
 
 	std::ofstream chunkFile;
@@ -190,44 +156,12 @@ bool Chunk::save() const
 	{
 		std::cout << "Chunk:: save" << std::endl;
 
-		for (Block block : blocks)
+		for (BlockN block : blocks)
 		{
-			Bl_t blockID = Bl_t(block.ID);
-//		std::cout << "Write: " << blockID << "\t";
-			// VarInt write
-			uint8_t buffer[5];
-			buffer[0] = (blockID >> 28) & (uint8_t)127 | (uint8_t)128;
-			buffer[1] = (blockID >> 21) & (uint8_t)127 | (uint8_t)128;
-			buffer[2] = (blockID >> 14) & (uint8_t)127 | (uint8_t)128;
-			buffer[3] = (blockID >> 7)  & (uint8_t)127 | (uint8_t)128;
-			buffer[4] = (blockID)       & (uint8_t)127;
-
-			if (blockID >= (Bl_t)1 << 28)
-			{
-				chunkFile << buffer[0];
-//				std::cout << (uint)buffer[0] << " ";
-			}
-
-			if (blockID >= (Bl_t)1 << 21)
-			{
-				chunkFile << buffer[1];
-//				std::cout << (uint)buffer[1] << " ";
-			}
-
-			if (blockID >= (Bl_t)1 << 14)
-			{
-				chunkFile << buffer[2];
-//				std::cout << (uint)buffer[2] << " ";
-			}
-
-			if (blockID >= (Bl_t)1 << 7)
-			{
-				chunkFile << buffer[3];
-//				std::cout << (uint)buffer[3] << " ";
-			}
-
-			chunkFile << buffer[4];
-//			std::cout << (uint)buffer[4] << " " << std::endl;
+			auto result = integer_to_varint(static_cast<Bl_t>(block));
+			
+			for (; result.index < result.bytes.size(); ++result.index)
+				chunkFile << result.bytes[result.index];
 
 		}
 	}
@@ -240,8 +174,8 @@ bool Chunk::save() const
 void Chunk::testFill()
 {
 	size_t xd = 0;
-	for (Block& block : blocks)
-		block = Block(xd++);
+	for (BlockN& block : blocks)
+		block = BlockN(xd++);
 
 }
 
@@ -271,7 +205,7 @@ void Chunk::flatFill()
 
 
 
-Block Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
+BlockN Chunk::getBlockAt(BlkCrd x, BlkCrd y) const
 {
 	if (x < 0 || x >= CHUNK_WIDTH || y < 0 || y >= CHUNK_HEIGHT)
 	{

@@ -1,20 +1,24 @@
 #
 #include "defines.h"
+#include "functions.h"
 
 #include <string>
+#include <array>
 #include "Filesystem.h"
 
 #include "GL/glut.h"
 
-
 #include <FastNoise/FastNoise.h>
+
 
 #include "ChunkManager.h"
 #include "Entity.h"
 
-#include "functions.h"
+#include "TimeDiff.h"
 
-using namespace std;
+
+
+//using namespace std;
 
 
 
@@ -83,12 +87,10 @@ void LOOP(/*int value*/)
 		fps = frameCount * 1000.0f / (Tnow - Tprevfps);
 		Tprevfps = Tnow;
 		frameCount = 0;
+		std::cout << "FPS: " << fps << std::endl;
 	}
 	
 	chunkManager.updateTnow(Tnow);
-	
-//	glutTimerFunc(refreshMills, LOOP, 0);
-	// /Time management
 
 	player.env = Environments::midair;
 
@@ -108,7 +110,7 @@ void LOOP(/*int value*/)
 		{
 			Movement movement = player.tryMovement(remainingTime, side);
 			Pos xd;
-			auto collisionParams = chunkManager.checkCollision(movement, player); //std::tuple<Pos, Block, Block, int, float>
+			auto collisionParams = chunkManager.checkCollision(movement, player); //std::tuple<Pos, BlockN, BlockN, int, float>
 
 			float fractionExecuted = std::get<4>(collisionParams);
 
@@ -152,11 +154,6 @@ void LOOP(/*int value*/)
 		cout << "Finished movement" << endl << endl << endl;
 #endif
 	}
-
-//	paused = true;
-
-	// Post re-paint request
-//	glutPostRedisplay();
 }
 
 void idleCllbck()
@@ -173,13 +170,10 @@ void displayCllbck()
 
 	LOOP();
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-
 	Pos plrCntr = player.posCabs();
 	Pos camPos = plrCntr;
 
-	ZOOMOUT = MIN_ZOOMOUT*3;
+	ZOOMOUT = MIN_ZOOMOUT * 3;
 
 	BlkCrd YminI = 0;
 	BlkCrd YmaxI = CHUNK_HEIGHT;
@@ -225,15 +219,19 @@ void displayCllbck()
 		scaleY = 1.0f / DEFAULT_ASPECT * aspectRatio;
 	}
 
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
 	glOrtho(-ZOOMOUT, ZOOMOUT, -ZOOMOUT, ZOOMOUT, 1.0f, -1.0f);
 	glScalef(scaleX, scaleY, 1.0f);
 	glTranslatef(-camPos.X, -camPos.Y, 0.0f);
 
-	minChunk = floor((camPos.X - ZOOMOUT / scaleX) / CHUNK_WIDTH);
-	maxChunk = floor((camPos.X + ZOOMOUT / scaleX) / CHUNK_WIDTH);
 
-	YminI = std::floor(camPos.Y - ZOOMOUT / scaleY);
-	YmaxI = std:: ceil(camPos.Y + ZOOMOUT / scaleY);
+	minChunk = static_cast<ChkCrd>(std::floor((camPos.X - ZOOMOUT / scaleX) / CHUNK_WIDTH));
+	maxChunk = static_cast<ChkCrd>(std::floor((camPos.X + ZOOMOUT / scaleX) / CHUNK_WIDTH));
+
+	YminI = static_cast<BlkCrd>(std::floor(camPos.Y - ZOOMOUT / scaleY));
+	YmaxI = static_cast<BlkCrd>(std::floor(camPos.Y + ZOOMOUT / scaleY));
 
 #if REQUIRE_ENTIRE_CHUNK
 	minChunk += 1;
@@ -252,34 +250,43 @@ void displayCllbck()
 
 	player.draw();
 
+	glPopMatrix();
+
+
+	auto t1 = std::chrono::steady_clock::now();
+
 	// DEBUG MENU
 	if (debugMenu)
 	{
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
-			"FPS: " + to_string(fps),
-			"Chunks: " + to_string(chunkManager.count()),
+			"FPS: "    + std::to_string(fps),
+			"Chunks: " + std::to_string(chunkManager.count())
 		}, 0, DEBUG_FONT_H);
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
-			"Pos: " + to_string(player.pos.X) + ", " + to_string(player.pos.Y),
-			"Vel: " + to_string(player.vel.X) + ", " + to_string(player.vel.Y),
-			"Acc: " + to_string(player.acc.X) + ", " + to_string(player.acc.Y)
+			"Pos: " + std::to_string(player.pos.X) + ", " + std::to_string(player.pos.Y),
+			"Vel: " + std::to_string(player.vel.X) + ", " + std::to_string(player.vel.Y),
+			"Acc: " + std::to_string(player.acc.X) + ", " + std::to_string(player.acc.Y)
 		}, 1, DEBUG_FONT_H);
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
-			"Cam: " + to_string(camPos.X) + ", " + to_string(camPos.Y),
-			"Max Zoom: " + to_string(MAX_ZOOMOUT),
-			"Cur Zoom: " + to_string(ZOOMOUT),
-			"Zoom Lvl: " + to_string(zoomoutLvl),
-			"Ymin: " + to_string(YminI),
-			"Ymax: " + to_string(YmaxI)
+			"Cam: "      + std::to_string(camPos.X) + ", " + std::to_string(camPos.Y),
+			"Max Zoom: " + std::to_string(MAX_ZOOMOUT),
+			"Cur Zoom: " + std::to_string(ZOOMOUT),
+			"Zoom Lvl: " + std::to_string(zoomoutLvl),
+			"Ymin: "     + std::to_string(YminI),
+			"Ymax: "     + std::to_string(YmaxI)
 		}, 2, DEBUG_FONT_H);
 
 		drawStringOnWindow(10, 10, Z_VAL_MENU, DEBUG_FONT, {
-			"Tnow: " + to_string(Tnow),
-			"Tdiff: " + to_string(Tdiff)
+			"Tnow: " +  std::to_string(Tnow),
+			"Tdiff: " + std::to_string(Tdiff)
 		}, 3, DEBUG_FONT_H);
 	}
+
+	auto t2 = std::chrono::steady_clock::now();
+
+	std::cout << "Time: " << duration2readable(t1, t2) << std::endl;
 	
 	// DRAW
 #if DOUBLE_BUFFERED
@@ -336,7 +343,7 @@ void applyWindowMode(int mode)
 		break;
 
 	default:
-		throw new invalid_argument("Wrong Window mode!");
+		throw new std::invalid_argument("Wrong Window mode!");
 		break;
 	}
 }
@@ -365,7 +372,7 @@ void specialKeyEvent(int key, int x, int y)
 			windowMode = windowed;
 			break;
 		default:
-			throw new invalid_argument("Wrong Window mode!");
+			throw new std::invalid_argument("Wrong Window mode!");
 			break;
 		}
 		applyWindowMode(windowMode);
@@ -549,17 +556,18 @@ int main(int argc, char** argv)
 		std::cout << std::endl;
 
 		std::cout << "Name to block test:" << std::endl;;
-		Block xd2 = BlockN::bedrock;
-		std::cout << Bl_t(xd2.ID) << endl;
+		BlockN xd2 = BlockN::bedrock;
+		std::cout << Bl_t(xd2) << endl;
 	}
 	//*/
+
 
 //	system("pause");
 //	return 0;
 
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
 	glutMainLoop(); // Enter event-processing loop
-	
+
 	system("pause");
 	return 0;
 }
