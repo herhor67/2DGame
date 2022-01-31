@@ -12,6 +12,7 @@ const BiomeN ChunkGen::BmNullRefGet = BiomeN::MIN;
 const BlkCrd ChunkGen::HtNullRefGet = INT_MIN;
 
 
+
 ChunkGen::ChunkGen(ChkCrd _Xpos, std::array<BlockN, CHUNK_BLOCKNUM>& _dataRef) : Xpos(_Xpos), dataRef(_dataRef) { }
 
 ChunkGen::~ChunkGen() { }
@@ -27,7 +28,7 @@ inline void ChunkGen::get_biomes()
 	{
 		float value = biomeNoise[i] * 0.5f + 0.5f;
 
-		BiomeN biome = BiomeN(remap01_dsc(static_cast<Bm_t>(BiomeN::MIN) + 1, static_cast<Bm_t>(BiomeN::MAX) - 1, value));
+		BiomeN biome = BiomeN(remap01(static_cast<Bm_t>(BiomeN::MIN) + 1, static_cast<Bm_t>(BiomeN::MAX) - 1, value));
 
 //		biome = BiomeN::Mountains;
 
@@ -226,7 +227,6 @@ inline void ChunkGen::generate_caves()
 	}
 }
 
-
 // fill world with stone, from Y0 to Ymax, except caves
 inline void ChunkGen::fill_with_stone() const
 {
@@ -244,7 +244,7 @@ inline void ChunkGen::fill_with_fluids() const
 	{
 		BlkCrd Ymax = heightAtGet(x);
 		if (Ymax <= WATER_LEVEL)
-			for (BlkCrd y = WATER_LEVEL; y > Ymax; --y)
+			for (BlkCrd y = WATER_LEVEL; y > 0; --y)
 				if (blockAtGet(y, x) == BlockN::air)
 					blockAtSet(y, x) = BlockN::water;
 				else
@@ -492,7 +492,7 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 		{
 			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
-			int side = int(rnd * 4) % 4;
+			int side = remap01(0, 3, rnd);
 			
 			std::array<BlkCrd, 5> heights;
 			for (BlkCrd i = 0; i <= 4; ++i)
@@ -548,7 +548,7 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 		{
 			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
-			int height = remap01_dsc(1, 4, rnd);
+			int height = remap01(1, 4, rnd);
 			for (int i = 1; i <= height; ++i)
 				blockAtSet(Ymax + i, x) = BlockN::cactoo;
 		}
@@ -557,7 +557,9 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 
 	case StrctrN::Pumpkin:
 		if (Ymax >= WATER_LEVEL)
+		{
 			blockAtSet(Ymax + 1, x) = BlockN::pumpkin;
+		}
 		break;
 
 
@@ -566,8 +568,8 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 		{
 			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 			
-			int height = remap01_dsc(5, 15, rnd);
-			int radius = remap01_dsc(2, 4, rnd);
+			int height = remap01(5, 15, rnd);
+			int radius = remap01(2, 4, rnd);
 
 			for (int i = 1; i <= height - 2; ++i)
 				blockAtSet(Ymax + i, x) = BlockN::sprucewood;
@@ -592,10 +594,10 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			float rnd2 = Generators::white01()->GenSingle2D(Xttl, 2, 123456);
 			float rnd3 = Generators::white01()->GenSingle2D(Xttl, 3, 123456);
 
-			int height = rnd1 * 10 + 5;
-			int branches = rnd1 * 5;
-			int side = (rnd2 > 0.5f) ? 1 : -1;
-			bool orient = rnd3 > 0.5f;
+			int height   = remap01(10, 15, rnd1);
+			int branches = remap01(0, 4, rnd1);
+			int side     = (rnd2 > 0.5f) ? 1 : -1;
+			bool orient  =  rnd3 > 0.5f;
 
 			for (int i = 1; i <= height; ++i)
 				blockAtSet(Ymax + i, x) = BlockN::oakwood;
@@ -630,8 +632,8 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			float rnd1 = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 			float rnd2 = Generators::white01()->GenSingle2D(Xttl, 2, 123456);
 
-			int height = rnd1 * 7 + 5;
-			int offset = (rnd2 * 2 - 1) * 4 * (rnd1 + 1);
+			int height = remap01(5, 11, rnd1);
+			int offset = remap01(-1.0f, 1.0f, rnd2) * remap01(1.0f, 2.0f, rnd1) * 4;
 
 			for (int i = 1; i <= height; ++i)
 				blockAtSet(Ymax + i, x + remap(1, height, 0, offset, i)) = BlockN::acaciawood;
@@ -653,9 +655,9 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 		{
 			float rnd = Generators::white01()->GenSingle2D(Xttl, 1, 123456);
 
-			int height = rnd * 15 + 20;
-			int lvsw = rnd * 3 + 2;
-			int trnkw = rnd * 3 + 1;
+			int height = remap01(15, 35, rnd);
+			int lvsw   = remap01(2, 4, rnd);
+			int trnkw  = remap01(1, 3, rnd);
 
 			if (trnkw >= 1)
 				for (int j = 0; j <= height - 1; ++j)
@@ -687,10 +689,10 @@ inline void ChunkGen::generate_structure(StrctrN strctr, BlkCrd x) const
 			float rnd3 = Generators::white01()->GenSingle2D(Xttl, 3, 123456);
 			float rnd4 = Generators::white01()->GenSingle2D(Xttl, 4, 123456);
 
-			int height = rnd1 * 10 + 3;
-			int branches = (rnd1 * 0.5f + 0.5f) * 7 * (rnd2 * 0.6f + 0.4f);
+			int height = remap01(3, 12, rnd1);
+			int branches = remap01(0.5f, 1.0f, rnd1) * remap01(0.4f, 1.0f, rnd1) * 7;
 			int side = (rnd3 > 0.5f) ? 1 : -1;
-			BlockN color = static_cast<BlockN>(remap01_dsc(static_cast<Bl_t>(BlockN::redcoral), static_cast<Bl_t>(BlockN::bluecoral), rnd4));
+			BlockN color = static_cast<BlockN>(remap01(static_cast<Bl_t>(BlockN::redcoral), static_cast<Bl_t>(BlockN::bluecoral), rnd4));
 
 			for (int i = 1; i <= height; ++i)
 				if (blockAtGet(Ymax + i, x) == BlockN::water)

@@ -50,13 +50,13 @@ inline BlkCrd remap(BlkCrd istart, BlkCrd istop, BlkCrd ostart, BlkCrd ostop, Bl
 	return ostart + (ostop - ostart) * (value - istart) / (istop - istart);
 }
 
-inline float  remap01_cnt(float ostart, float ostop, float value)
+inline float  remap01(float ostart, float ostop, float value)
 {
 	return ostart + (ostop - ostart) * value;
 }
 
 template <typename Integer, std::enable_if_t<std::is_integral_v<Integer>, bool> = true>
-inline constexpr Integer remap01_dsc(Integer ostart, Integer ostop, float value)
+inline constexpr Integer remap01(Integer ostart, Integer ostop, float value)
 {
 	return std::clamp(ostart + Integer((ostop - ostart + 1) * value), ostart, ostop);
 }
