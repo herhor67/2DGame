@@ -15,6 +15,7 @@
 #include "Entity.h"
 
 #include "TimeDiff.h"
+#include "BMPSave.h"
 
 
 
@@ -73,7 +74,7 @@ void LOOP(/*int value*/)
 {
 	// Debug
 #if CONSOLE_LOG_CALLBACKS
-	cout << "Timer called" << endl;
+	std::cout << "Timer called" << std::endl;
 #endif
 
 	// Time management
@@ -164,7 +165,7 @@ void idleCllbck()
 void displayCllbck()
 {
 #if CONSOLE_LOG_CALLBACKS
-	cout << "displayCllbck called" << endl;
+	std::cout << "displayCllbck called" << std::endl;
 #endif
 	++frameCount;
 
@@ -253,7 +254,7 @@ void displayCllbck()
 	glPopMatrix();
 
 
-	auto t1 = std::chrono::steady_clock::now();
+//	auto t1 = std::chrono::steady_clock::now();
 
 	// DEBUG MENU
 	if (debugMenu)
@@ -284,9 +285,9 @@ void displayCllbck()
 		}, 3, DEBUG_FONT_H);
 	}
 
-	auto t2 = std::chrono::steady_clock::now();
+//	auto t2 = std::chrono::steady_clock::now();
 
-	std::cout << "Time: " << duration2readable(t1, t2) << std::endl;
+//	std::cout << "Time: " << duration2readable(t1, t2) << std::endl;
 	
 	// DRAW
 #if DOUBLE_BUFFERED
@@ -300,7 +301,7 @@ void displayCllbck()
 void reshapeCllbck(GLsizei width, GLsizei height)
 {
 #if CONSOLE_LOG_CALLBACKS
-	cout << "reshapeCllbck called" << endl;
+	std::cout << "reshapeCllbck called" << std::endl;
 #endif
 
 	if (height <= 0)
@@ -351,10 +352,38 @@ void applyWindowMode(int mode)
 void specialKeyEvent(int key, int x, int y)
 {
 #if CONSOLE_LOG_EVENTS
-	cout << "specialKeyEvent called:" << key << endl;
+	std::cout << "specialKeyEvent called:" << key << std::endl;
 #endif
 	switch (key)
 	{
+	case GLUT_KEY_F2:    // F2: Take screenshot
+		{
+			size_t W = glutGet(GLUT_WINDOW_WIDTH);
+			size_t H = glutGet(GLUT_WINDOW_HEIGHT);
+			std::vector<uint8_t> picR(W * H, 0);
+			std::vector<uint8_t> picG(W * H, 0);
+			std::vector<uint8_t> picB(W * H, 0);
+
+			glReadPixels(0, 0, W, H, GL_RED,   GL_UNSIGNED_BYTE, picR.data());
+			glReadPixels(0, 0, W, H, GL_GREEN, GL_UNSIGNED_BYTE, picG.data());
+			glReadPixels(0, 0, W, H, GL_BLUE,  GL_UNSIGNED_BYTE, picB.data());
+
+			std::vector<uint8_t> pic(W * H * 3, 0);
+
+			for (size_t i = 0; i < W * H; ++i)
+			{
+				pic[3 * i + 0] = picB[i];
+				pic[3 * i + 1] = picG[i];
+				pic[3 * i + 2] = picR[i];
+			}
+
+			std::string path = "screenshots/xd.bmp";
+
+			generateBitmapImage(pic.data(), W, H, path.c_str());
+
+		}
+		break;
+
 	case GLUT_KEY_F3:    // F3: Toggle debug menu
 		debugMenu = !debugMenu;
 		break;
@@ -399,7 +428,7 @@ void specialKeyEvent(int key, int x, int y)
 void regularKeyEvent(unsigned char key, int x, int y)
 {
 #if CONSOLE_LOG_EVENTS
-	cout << "regularKeyEvent called: " << key << ' ' << (uint)key << endl;
+	std::cout << "regularKeyEvent called: " << key << ' ' << (uint32_t)key << std::endl;
 #endif
 	switch (toupper(key))
 	{
@@ -468,7 +497,7 @@ void regularKeyEvent(unsigned char key, int x, int y)
 void mouseEvent(int button, int state, int x, int y)
 {
 #if CONSOLE_LOG_EVENTS
-	cout << "mouseEvent called" << endl;
+	std::cout << "mouseEvent called" << std::endl;
 #endif
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
@@ -564,6 +593,8 @@ int main(int argc, char** argv)
 
 //	system("pause");
 //	return 0;
+
+	printf("OpenGL version supported by this platform (%s): \n", glGetString(GL_VERSION));
 
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
 	glutMainLoop(); // Enter event-processing loop
