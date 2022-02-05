@@ -25,7 +25,7 @@
 
 char title[] = "Herraria";  // Windowed mode's title
 int windowedWidth = 1440;     // Windowed mode's width
-int windowedHeight = 810;     // Windowed mode's height
+int windowedHeight = 810/2;     // Windowed mode's height
 int windowedPosX = 1000;      // Windowed mode's top-left corner x
 int windowedPosY = 200;      // Windowed mode's top-left corner y
 int windowID;
@@ -38,7 +38,7 @@ int windowMode = windowed;
 
 
 bool paused = false;
-bool debugMenu = true;
+bool debugMenu = false;
 
 int fps = 0;
 int frameCount = 0;
@@ -52,7 +52,9 @@ int currentWindowHeight;
 GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
 
 int zoomoutLvl = ZOOMOUT_LVLS;
-float ZOOMOUT = 400.0f;
+//float MAX_ZOOMOUT = CHUNK_HEIGHT * 0.5f;
+float MAX_ZOOMOUT = 2000.0f;
+float ZOOMOUT;
 
 
 ChunkManager chunkManager;
@@ -174,8 +176,6 @@ void displayCllbck()
 	Pos plrCntr = player.posCabs();
 	Pos camPos = plrCntr;
 
-	ZOOMOUT = MIN_ZOOMOUT * 3;
-
 	BlkCrd YminI = 0;
 	BlkCrd YmaxI = CHUNK_HEIGHT;
 	ChkCrd minChunk = 0;
@@ -185,7 +185,7 @@ void displayCllbck()
 	float Ymin = std::min(plrCntr.Y, double(WATER_LEVEL)) - MIN_ZOOMOUT;
 	float Ymax = plrCntr.Y + MIN_ZOOMOUT;
 
-	float MAX_ZOOMOUT = (Ymax - Ymin) * 0.5f;
+	MAX_ZOOMOUT = (Ymax - Ymin) * 0.5f;
 	float maxCamY     = (Ymax + Ymin) * 0.5f;
 
 	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, float(zoomoutLvl) / ZOOMOUT_LVLS);
@@ -200,7 +200,6 @@ void displayCllbck()
 		else
 			camPos.Y = plrCntr.Y + (maxCamY - plrCntr.Y) * (pwrrat - 1.0f) / (MAX_ZOOMOUT / MIN_ZOOMOUT - 1.0f) * DEFAULT_ASPECT / aspectRatio;
 #else
-	float MAX_ZOOMOUT = CHUNK_HEIGHT * 0.5f;
 	float pwrrat = std::pow(MAX_ZOOMOUT / MIN_ZOOMOUT, float(zoomoutLvl) / ZOOMOUT_LVLS);
 	ZOOMOUT = MIN_ZOOMOUT * pwrrat;
 #endif
@@ -231,8 +230,8 @@ void displayCllbck()
 	minChunk = static_cast<ChkCrd>(std::floor((camPos.X - ZOOMOUT / scaleX) / CHUNK_WIDTH));
 	maxChunk = static_cast<ChkCrd>(std::floor((camPos.X + ZOOMOUT / scaleX) / CHUNK_WIDTH));
 
-	YminI = static_cast<BlkCrd>(std::floor(camPos.Y - ZOOMOUT / scaleY));
-	YmaxI = static_cast<BlkCrd>(std::floor(camPos.Y + ZOOMOUT / scaleY));
+	YminI    = static_cast<BlkCrd>(std::floor(camPos.Y - ZOOMOUT / scaleY));
+	YmaxI    = static_cast<BlkCrd>(std::floor(camPos.Y + ZOOMOUT / scaleY));
 
 #if REQUIRE_ENTIRE_CHUNK
 	minChunk += 1;
@@ -360,15 +359,16 @@ void specialKeyEvent(int key, int x, int y)
 		{
 			size_t W = glutGet(GLUT_WINDOW_WIDTH);
 			size_t H = glutGet(GLUT_WINDOW_HEIGHT);
-			std::vector<uint8_t> picR(W * H, 0);
-			std::vector<uint8_t> picG(W * H, 0);
-			std::vector<uint8_t> picB(W * H, 0);
+
+			std::vector<uint8_t> picR(W * H * 2, 0);
+			std::vector<uint8_t> picG(W * H * 2, 0);
+			std::vector<uint8_t> picB(W * H * 2, 0);
 
 			glReadPixels(0, 0, W, H, GL_RED,   GL_UNSIGNED_BYTE, picR.data());
 			glReadPixels(0, 0, W, H, GL_GREEN, GL_UNSIGNED_BYTE, picG.data());
 			glReadPixels(0, 0, W, H, GL_BLUE,  GL_UNSIGNED_BYTE, picB.data());
 
-			std::vector<uint8_t> pic(W * H * 3, 0);
+			std::vector<uint8_t> pic(W * H * 3 * 2, 0);
 
 			for (size_t i = 0; i < W * H; ++i)
 			{
@@ -377,9 +377,9 @@ void specialKeyEvent(int key, int x, int y)
 				pic[3 * i + 2] = picR[i];
 			}
 
-			std::string path = "screenshots/xd.bmp";
+			std::string path = (std::string)"screenshots/" + std::to_string(time(nullptr)) + ".bmp";
 
-			generateBitmapImage(pic.data(), W, H, path.c_str());
+			generateBitmapImage(pic.data(), W+0, H, path.c_str());
 
 		}
 		break;
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
 	std::ios_base::sync_with_stdio(false);
 
 //	player.pos = { 0.0f, WATER_LEVEL };
-	player.pos = { 0.0f, 127.0f };
+	player.pos = { 0.0f, 63.0f };
 
 
 	glutInit(&argc, argv);            // Initialize GLUT
@@ -594,7 +594,10 @@ int main(int argc, char** argv)
 //	system("pause");
 //	return 0;
 
-	printf("OpenGL version supported by this platform (%s): \n", glGetString(GL_VERSION));
+	std::cout << "GL_VENDOR:     " << glGetString(GL_VENDOR)     << std::endl;
+	std::cout << "GL_RENDERER:   " << glGetString(GL_RENDERER)   << std::endl;
+	std::cout << "GL_VERSION:    " << glGetString(GL_VERSION)    << std::endl;
+//	std::cout << "GL_EXTENSIONS: " << glGetString(GL_EXTENSIONS) << std::endl;
 
 	Tnow = glutGet(GLUT_ELAPSED_TIME);
 	glutMainLoop(); // Enter event-processing loop

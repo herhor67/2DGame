@@ -8,20 +8,21 @@
 
 
 
+// PREPROCESSOR
+#pragma warning(disable:6262)  // too much memory on stack, I dont give a Flying Dutchman
+#pragma warning(disable:28020) // param 1 at this call something something bullshit
+
+#include <iostream>
+#include <type_traits>
 
 
 // TYPEDEFS
-#include <type_traits>
-
 typedef std::make_signed<size_t>::type BlkCrd; // BlockN Coordinate Type
 typedef std::make_signed<size_t>::type ChkCrd; // Chunk Coordinate Type
 
 typedef float EntCrd; // Entity Coordinate Type
 
 typedef float TDT; // Time Difference Type
-
-typedef unsigned char uint8_t; // color type
-
 
 
 
@@ -31,7 +32,7 @@ typedef unsigned char uint8_t; // color type
 
 // CHUNK FORMAT SETTINGS
 static constexpr BlkCrd CHUNK_HEIGHT = 256;
-static constexpr BlkCrd CHUNK_WIDTH = 16;
+static constexpr BlkCrd CHUNK_WIDTH = 64;
 static constexpr BlkCrd CHUNK_BLOCKNUM = CHUNK_HEIGHT * CHUNK_WIDTH;
 static constexpr BlkCrd CHUNK_VERTNUM = (CHUNK_HEIGHT + 1) * (CHUNK_WIDTH + 1);
 static constexpr char CHUNK_PATH[] = "chunks/";
@@ -41,11 +42,13 @@ static constexpr int CHUNK_TTL_MS = 10 * 1000;
 
 
 // TERRAIN SETTINGS
+static constexpr size_t SEED = 694202137;
+
 static constexpr BlkCrd WATER_LEVEL = 64;
 static constexpr BlkCrd  LAVA_LEVEL = 10;
 
 static constexpr BlkCrd STRUCTURE_OUT_RDS = 16;
-static constexpr BlkCrd BIOME_ITPL_RDS = 16;
+static constexpr BlkCrd BIOME_ITPL_RDS    = 16;
 
 static constexpr BlkCrd STRUCTURE_WIDTH = CHUNK_WIDTH + 2 * STRUCTURE_OUT_RDS;
 static constexpr BlkCrd TERRAIN_OFFSET  = STRUCTURE_OUT_RDS;
@@ -121,10 +124,7 @@ static constexpr float ENV_GRAVITY = -9.81f;
 // DEBUG SETTINGS
 #define DEBUG_COLOR_BIOMES 0
 #define DEBUG_CONST_HEIGHT 0
+#define DEBUG_NO_CAVES 0
+#define DEBUG_NO_SURFACE 0
 #define DEBUG_NO_STRCTRS 0
 
-
-#include <iostream>
-
-#pragma warning(disable:6262) // too much memory on stack, I dont give a Flying Dutchman
-#pragma warning(disable:28020) // param 1 at this call something something bullshit

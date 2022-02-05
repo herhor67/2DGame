@@ -15,7 +15,7 @@
 #include "StaticGenerators.h"
 
 
-enum class BiomeN : uint32_t { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
+enum class BiomeN  : uint32_t { MIN = 0, Polar, Taiga, Mountains, Ocean, Hills, Plains, Forest, Redwoodforest, Savanna, Desert, MAX };
 typedef std::underlying_type_t<BiomeN> Bm_t;
 
 enum class StrctrN : uint32_t { MIN = 0, Cactoo, Pumpkin, Oak, Spruce, Acacia, Redwood, Igloo, Coral, MAX };
