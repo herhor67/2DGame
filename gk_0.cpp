@@ -25,7 +25,7 @@
 
 char title[] = "Herraria";  // Windowed mode's title
 int windowedWidth = 1440;     // Windowed mode's width
-int windowedHeight = 810/2;     // Windowed mode's height
+int windowedHeight = 810;     // Windowed mode's height
 int windowedPosX = 1000;      // Windowed mode's top-left corner x
 int windowedPosY = 200;      // Windowed mode's top-left corner y
 int windowID;
@@ -52,8 +52,8 @@ int currentWindowHeight;
 GLfloat aspectRatio = DEFAULT_ASPECT; // Width / Height
 
 int zoomoutLvl = ZOOMOUT_LVLS;
-//float MAX_ZOOMOUT = CHUNK_HEIGHT * 0.5f;
-float MAX_ZOOMOUT = 2000.0f;
+float MAX_ZOOMOUT = CHUNK_HEIGHT * 0.5f;
+//float MAX_ZOOMOUT = 2000.0f;
 float ZOOMOUT;
 
 

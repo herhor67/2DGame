@@ -30,7 +30,7 @@ void ChunkManager::updateTTL(ChkCrd Xpos)
 	chunks[Xpos].second = Tnow;
 }
 
-ChunkManager::ChT& ChunkManager::readChunk(ChkCrd Xpos)
+ChunkManager::ChT& ChunkManager::emplaceChunk(ChkCrd Xpos)
 {
 	return chunks.emplace(Xpos, std::make_pair(Chunk(Xpos), Tnow)).first->second;
 }
@@ -38,13 +38,13 @@ ChunkManager::ChT& ChunkManager::readChunk(ChkCrd Xpos)
 void ChunkManager::loadChunk(ChkCrd Xpos)
 {
 	if (chunks.find(Xpos) == chunks.end())
-		readChunk(Xpos);
+		emplaceChunk(Xpos);
 }
 
 Chunk& ChunkManager::getChunk(ChkCrd Xpos)
 {
 	if (chunks.find(Xpos) == chunks.end())
-		return readChunk(Xpos).first;
+		return emplaceChunk(Xpos).first;
 
 	return chunks.find(Xpos)->second.first;
 }

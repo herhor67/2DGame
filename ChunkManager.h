@@ -22,7 +22,7 @@ public:
 	void updateTnow(int);
 	void removeOld();
 	void updateTTL(ChkCrd);
-	ChT& readChunk(ChkCrd);
+	ChT& emplaceChunk(ChkCrd);
 	void loadChunk(ChkCrd);
 	Chunk& getChunk(ChkCrd);
 	size_t count();

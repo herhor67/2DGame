@@ -47,9 +47,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CopyFileToFolders>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F1CBBA82-35ED-4081-9725-73ECA81C1658}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
